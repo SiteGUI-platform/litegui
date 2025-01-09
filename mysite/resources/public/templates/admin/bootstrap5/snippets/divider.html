@@ -1,0 +1,63 @@
+<div class="sg-block-content position-relative">
+  <div class="sg-divider" style="--bg-divider: #e713d5;">
+    <svg class="w-100 h-100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="100 -24 220 40" preserveAspectRatio="none" shape-rendering="auto">
+      <defs>
+        <path id="sg-divider-wave" d="M1 0c30 0 59-5 87-5s51 10 91 10 61-18 97-19 58 18 60 13v13h-335z"></path>          
+      </defs>
+      <g class="">
+        <use xlink:href="#sg-divider-wave" x="80" y="6" fill="currentColor" fill-opacity="1"></use>
+        <use xlink:href="#sg-divider-wave" x="45" y="5" fill="currentColor" fill-opacity=".3"></use>
+      </g>
+    </svg>
+  </div>
+  <style type="text/css">
+  .sg-divider {
+    color: var(--bg-divider);
+    position: absolute;
+    top: -150px;
+    height:15vh;
+    width: 100%;
+    min-height:150px;
+    max-height:200px;
+    overflow: hidden;
+    z-index: 3;
+  }
+  .sg-divider-inverted {
+    top: unset !important;
+    bottom: -150px;
+    rotate: -180deg;
+  }  
+  @media (max-width: 768px) {
+    .sg-divider {
+      top: -80px;
+      height:80px;
+      min-height:80px;
+    }
+    .sg-divider-inverted {
+      bottom: -80px;
+    }
+  }
+  </style>
+</div>
+
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'pre') {
+      var add = $('<input id="color-picker" type="color" class="form-control mb-2">')
+      .val( el.find('.sg-divider').css('--bg-divider') )
+      .on('input', function () {
+        el.find('.sg-divider').css('--bg-divider', $(this).val().trim())
+      });
+      add.data('target', el);
+      sgEditor.addSidebarElement('<label for="color-picker" class="form-label">Background Color</label>')
+      sgEditor.addSidebarElement(add);
+
+      add = $('<div class="btn-group btn-group-sm mb-2 w-100" role="group"><input type="radio" class="btn-check" name="btncall" id="call-button1"><label for="call-button1" class="btn btn-left btn-outline-secondary">Rotate</label></div>');
+      add.on('click', '#call-button1', function() {
+        el.find('.sg-divider').toggleClass('sg-divider-inverted');
+      })
+      sgEditor.addSidebarElement('<label class="form-label">Direction</label>');
+      sgEditor.addSidebarElement(add);
+    }
+  });
+</script>

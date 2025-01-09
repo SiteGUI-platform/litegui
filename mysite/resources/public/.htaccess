@@ -1,0 +1,5 @@
+Options All -Indexes
+#prevent access to PHP and template files
+<FilesMatch "\.(png|php|tpl|twig)$">
+Require all denied
+</FilesMatch>

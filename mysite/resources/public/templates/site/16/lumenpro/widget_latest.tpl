@@ -1,0 +1,1 @@
+../lumen/widget_latest.tpl

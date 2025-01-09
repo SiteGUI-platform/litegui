@@ -1,0 +1,300 @@
+[
+	{
+		"name": "Layout",
+		"icon": "<i class='bi bi-columns px-2'></i>",
+		"snippets": [
+			{
+			    "id": "block",
+			    "name": "Block",
+			    "icon": "<i class='bi bi-square'></i>"
+			},{
+			    "id": "column_2x1",
+			    "name": "2 Columns",
+			    "icon": "<i class='bi bi-layout-split'></i>"
+			},{
+			    "id": "column_3x1",
+			    "name": "3 Columns",
+			    "icon": "<i class='bi bi-layout-three-columns'></i>"
+			},{
+			    "id": "column_4x1",
+			    "name": "4 Columns",
+			    "icon": "<i class='bi bi-reception-4'></i>"
+			}
+		]
+	},
+	{
+		"name": "Text",
+		"icon": "<i class='bi bi-file-richtext px-2'></i>",
+		"snippets": [
+			{
+			    "id": "heading",
+			    "name": "Heading",
+			    "icon": "<i class='bi bi-border-width'></i>"
+			},
+			{
+			    "id": "paragraph",
+			    "name": "Paragraph",
+			    "icon": "<i class='bi bi-text-paragraph'></i>"
+			},
+			{
+			    "id": "note",
+			    "name": "Note",
+			    "icon": "<i class='bi bi-chat-left'></i>"
+
+			},
+			{
+			    "id": "carousel",
+			    "name": "Carousel",
+			    "icon": "<i class='bi bi-code-square'></i>"
+			},
+			{
+			    "id": "accordion",
+			    "name": "Accordion",
+			    "icon": "<i class='bi bi-collection'></i>"
+			},
+			{
+			    "id": "collapse",
+			    "name": "Collapse",
+			    "icon": "<i class='bi bi-caret-down-square'></i>"
+			},
+			{
+			    "id": "dropdown",
+			    "name": "Dropdown",
+			    "icon": "<i class='bi bi-menu-button'></i>"
+			},
+			{
+			    "id": "tabs",
+			    "name": "Tabs",
+			    "icon": "<i class='bi bi-clipboard'></i>"
+			},
+			{
+			    "id": "image",
+			    "name": "Zoomable Image",
+			    "icon": "<i class='bi bi-card-image'></i>"
+			},
+			{
+			    "id": "button",
+			    "name": "Button",
+			    "icon": "<i class='bi bi-usb-c'></i>"
+			},
+			{
+			    "id": "button_group",
+			    "name": "Button Group",
+			    "icon": "<i class='bi bi-segmented-nav'></i>"
+			},
+			{
+			    "id": "code",
+			    "name": "Code Block",
+			    "icon": "<i class='bi bi-code-slash'></i>"
+			}
+		]
+	},
+	{
+		"name": "Animation & Overlay",
+		"icon": "<i class='bi bi-camera-video px-2'></i>",
+		"snippets": [
+			{
+			    "id": "wave",
+			    "name": "Waves",
+			    "icon": "<i class='bi bi-water'></i>"
+			},
+			{
+			    "id": "divider",
+			    "name": "Divider",
+			    "icon": "<i class='bi bi-view-list'></i>"
+			},
+			{
+			    "id": "blob",
+			    "name": "Blob",
+			    "icon": "<i class='bi bi-skype'></i>"
+			}
+		]
+	},		
+	{
+		"name": "Card",
+		"icon": "<i class='bi bi-card-text px-2'></i>",
+		"snippets": [
+			{
+			    "id": "card_header",
+			    "name": "With Header",
+			    "icon": "<i class='bi bi-card-heading'></i>"
+			},
+			{
+			    "id": "card_img_top",
+			    "name": "Image Top",
+			    "icon": "<i class='bi bi-file-richtext'></i>"
+			},
+			{
+			    "id": "card_img_bottom",
+			    "name": "Image Bottom",
+			    "icon": "<i class='bi bi-file-post-fill'></i>"
+			},
+			{
+			    "id": "card_img_left",
+			    "name": "Image Left",
+			    "icon": "<i class='bi bi-person-vcard'></i>"
+			},
+			{
+			    "id": "card_img_right",
+			    "name": "Image Right",
+			    "icon": "<i class='bi bi-person-video2'></i>"
+			},
+			{
+			    "id": "card_img_bg",
+			    "name": "Image Overlay",
+			    "icon": "<i class='bi bi-card-image'></i>"
+			},
+			{
+			    "id": "card_group",
+			    "name": "Card Group",
+			    "icon": "<i class='bi bi-window-split'></i>"
+			},
+			{
+			    "id": "card_list_group",
+			    "name": "List Group",
+			    "icon": "<i class='bi bi-view-stacked'></i>"
+			},
+			{
+			    "id": "card_list",
+			    "name": "Card List",
+			    "icon": "<i class='bi bi-card-list'></i>"
+			}
+		]
+	},
+	{
+		"name": "Snippet",
+		"icon": "<i class='bi bi-bookmark-heart px-2'></i>",
+		"snippets": [
+			{
+			    "id": "album",
+			    "name": "Album",
+			    "icon": "<i class='bi bi-images'></i>"
+			},
+			{
+			    "id": "pricing",
+			    "name": "Pricing Table",
+			    "icon": "<i class='bi bi-currency-dollar'></i>"
+			},
+			{
+			    "id": "comparison",
+			    "name": "Comparison",
+			    "icon": "<i class='bi bi-card-checklist'></i>"
+			},
+			{
+			    "id": "cover",
+			    "name": "Cover",
+			    "icon": "<i class='bi bi-window-fullscreen'></i>"
+			},
+			{
+			    "id": "featurette",
+			    "name": "Featurette (L)",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "featurette_right",
+			    "name": "Featurette (R)",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "feature_3x1",
+			    "name": "Features 3x1",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "features_cards",
+			    "name": "Features Cards",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "features_grid",
+			    "name": "Features Grid",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "features_category",
+			    "name": "Features Category",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "hero_screenshot",
+			    "name": "Screenshot",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "hero_centered",
+			    "name": "Centered Hero",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "hero_left",
+			    "name": "Left Hero",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "hero_vertical",
+			    "name": "Vertical Hero",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "hero_border",
+			    "name": "Border Hero",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},
+			{
+			    "id": "hero_dark_mode",
+			    "name": "Darkmode Hero",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			}
+		]
+	},
+	{
+		"name": "Header (Logo & Menu)",
+		"icon": "<i class='bi bi-usb-fill px-2'></i>",
+		"smarty": 1,
+		"snippets": [
+			{
+			    "id": "menu_dropdown",
+			    "name": "Dropdown Menu",
+			    "icon": "<i class='bi bi-menu-up'></i>",
+			    "smarty": 1
+			},
+			{
+			    "id": "menu_vertical",
+			    "name": "Vertical Menu",
+			    "icon": "<i class='bi bi-menu-up'></i>",
+			    "smarty": 1
+			}
+		]
+	},
+	{
+		"name": "Footer",
+		"icon": "<i class='bi bi-usb px-2'></i>",
+		"snippets": [
+			{
+			    "id": "footer_minimal",
+			    "name": "Minimal",
+			    "icon": "<i class='bi bi-menu-up'></i>"
+			},{
+			    "id": "footer_single_menu",
+			    "name": "Single Menu",
+			    "icon": "<i class='bi bi-menu-up'></i>",
+			    "smarty": 1
+			},{
+			    "id": "footer_column_menu",
+			    "name": "Section Menu (L)",
+			    "icon": "<i class='bi bi-menu-up'></i>",
+			    "smarty": 1
+			},{
+			    "id": "footer_column_menu_right",
+			    "name": "Section Menu (R)",
+			    "icon": "<i class='bi bi-menu-up'></i>",
+			    "smarty": 1
+			},{
+			    "id": "footer_cta",
+			    "name": "With CTA",
+			    "icon": "<i class='bi bi-menu-up'></i>",
+			    "smarty": 1
+			}
+		]
+	}		
+]

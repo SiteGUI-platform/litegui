@@ -1,0 +1,25 @@
+<div class="btn-group sg-block-content">
+  <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+    Dropdown
+  </button>
+  <ul class="dropdown-menu">
+    <li><a class="dropdown-item sg-editor-removable" href="#">Action</a></li>
+    <li><a class="dropdown-item sg-editor-removable" href="#">Another action</a></li>
+    <li><a class="dropdown-item sg-editor-removable" href="#">Something else here</a></li>
+    <li><hr class="dropdown-divider sg-editor-removable"></li>
+    <li class="sg-editor-template"><a class="dropdown-item sg-editor-removable" href="#">Separated link</a></li>
+  </ul>
+</div>
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'pre') {
+      console.log('Dropdown pre-function invoked');
+    }
+    if (stage == 'post') {
+      console.log('Dropdown post-function invoked');
+      //var add = el.find('.sg-block-content').clone().addClass('sg.tab-clone border border-dark');
+      //el.after(add);
+      //add.summernote('codeview.toggle')
+    }
+  });
+</script>

@@ -1,0 +1,1 @@
+../lumen/page.tpl

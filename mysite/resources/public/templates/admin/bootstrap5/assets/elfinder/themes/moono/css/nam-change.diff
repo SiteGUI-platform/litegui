@@ -1,0 +1,71 @@
+--- /home/sitegui/mysite/public/admin/siteadmin/assets/elfinder/themes/moono/css/theme.css	2017-02-22 13:51:35.000000000 -0500
++++ themes/moono/css/theme.css	2020-05-21 01:32:30.725639301 -0400
+@@ -57,7 +57,7 @@
+ }
+ .elfinder-cwd-icon:before {
+   font-family: FontAwesome;
+-  background: none;
++  //background: none;
+   display: block;
+   text-align: center;
+ }
+@@ -66,8 +66,15 @@
+   content: '\f016';
+ }
+ /* directories */
++.elfinder-cwd-icon-directory {
++  background: none;
++}
+ .elfinder-cwd-icon-directory:before {
+   content: '\f07b';
++  font-size: 48px;
++  top: 0;
++  color: paleturquoise;
++  background-color: transparent;
+ }
+ .elfinder-droppable-active .elfinder-cwd-icon-directory:before {
+   content: '\f07c';
+@@ -403,6 +410,34 @@
+ .elfinder-button-icon-sort:before {
+   content: '\f0dc';
+ }
++/*Added by Nam*/
++.elfinder-button-icon-fullscreen:before {
++  content: '\f0b2';	
++}
++.elfinder-button-icon-preference:before {
++  content: '\f013';
++}
++.elfinder-button-icon-undo:before {
++  content: '\f0e2';
++}
++.elfinder-button-icon-redo:before {
++  content: '\f01e';
++}
++.elfinder-button-icon-hide:before {
++  content: '\f070';
++}
++.elfinder-button-icon-empty:before {
++  content: '\f1f8';
++}
++.elfinder-button-icon-selectall:before {
++  content: '\f00a';
++}
++.elfinder-button-icon-selectnone:before {
++  content: '\f096';
++}
++.elfinder-button-icon-selectinvert:before {
++  content: '\f029';
++}
+ /* menus */
+ .elfinder-button-menu {
+   background-color: #fff;
+@@ -537,7 +572,7 @@
+ .elfinder .elfinder-cwd-view-icons .elfinder-cwd-file *,
+ .elfinder .elfinder-cwd-view-icons .elfinder-cwd-file .elfinder-cwd-filename,
+ .elfinder .elfinder-cwd-view-icons .elfinder-cwd-file .elfinder-cwd-file-wrapper {
+-  background: none;
++  //background: none;
+   cursor: pointer;
+   color: #000;
+ }

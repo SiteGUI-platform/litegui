@@ -1,0 +1,50 @@
+<pre class="sg-block-content">
+  <code>&lt;h1&gt;Code goes here&lt;/h1&gt;
+  </code>  
+</pre>  
+<script type="text/javascript" class="permanent">
+  initCMBlock = function (el) {
+    if ( ! $(el).children('.CodeMirror').length ){
+      var code = el.innerText;
+      el.innerHTML = '';
+      CodeMirror(el, {
+        value: code,
+        lineNumbers: true,
+        lineWrapping: true,
+        mode: {
+          name: "smarty", 
+          version: 3, 
+          baseMode: "text/html"
+        },
+        matchBrackets: true,
+        showCursorWhenSelecting: true
+      }); 
+      //override dblclick handler
+      el.parentNode.parentNode.addEventListener('dblclick', function (ev) {
+        ev.stopPropagation();
+      })         
+      el.addEventListener('mouseenter', function (ev) {
+        el.parentNode.parentNode.classList.add('sg-editing');
+      }) 
+      el.addEventListener('mouseleave', function (ev) {
+        el.parentNode.parentNode.classList.remove('sg-editing');
+      }) 
+    }
+  }
+  //init all added blocks
+  document.addEventListener("DOMContentLoaded", function(e){
+    $('#layout-editor pre code').each(function () {
+      initCMBlock(this);
+    })
+  }); 
+</script>  
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'init') {
+      el.find('pre code').each(function () {
+        initCMBlock(this);
+      });
+      $('script.permanent').slice(1).remove(); //remove all but first
+    }
+  })  
+</script>
