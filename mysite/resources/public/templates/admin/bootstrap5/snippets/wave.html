@@ -1,0 +1,91 @@
+<div class="sg-block-content position-relative">
+  <svg class="sg-waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+    <defs>
+      <path id="sg-gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+      <linearGradient id="sg-wave-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" data-color="#ffffff" />
+        <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
+      </linearGradient>
+    </defs>
+    <g class="sg-waves-parallax">
+      <use xlink:href="#sg-gentle-wave" x="48" y="0" fill="url(#sg-wave-gradient)" fill-opacity=".7" />
+      <use xlink:href="#sg-gentle-wave" x="48" y="3" fill="url(#sg-wave-gradient)" fill-opacity=".5" />
+      <use xlink:href="#sg-gentle-wave" x="48" y="5" fill="url(#sg-wave-gradient)" fill-opacity=".3" />
+      <use xlink:href="#sg-gentle-wave" x="48" y="7" fill="#ffffff" />
+    </g>
+  </svg>
+  <style type="text/css">
+  /* By SayanBarcha https://github.com/SayanBarcha/Simple-Waves */  
+  .sg-waves {
+    position: absolute;
+    top: -120px;
+    height:15vh;
+    width: 100%;
+    margin-bottom:-7px; /*Fix for safari gap*/
+    min-height:120px;
+    max-height:150px;
+    z-index: 3;
+  }
+  .sg-waves-parallax > use {
+    animation: move-forever 25s cubic-bezier(.55,.5,.45,.5) infinite;
+  }
+  .sg-waves-parallax > use:nth-child(1) {
+    animation-delay: -2s;
+    animation-duration: 7s;
+  }
+  .sg-waves-parallax > use:nth-child(2) {
+    animation-delay: -3s;
+    animation-duration: 10s;
+  }
+  .sg-waves-parallax > use:nth-child(3) {
+    animation-delay: -4s;
+    animation-duration: 13s;
+  }
+  .sg-waves-parallax > use:nth-child(4) {
+    animation-delay: -5s;
+    animation-duration: 20s;
+  }
+  @keyframes move-forever {
+    0% {
+     transform: translate3d(-90px,0,0);
+    }
+    100% { 
+      transform: translate3d(85px,0,0);
+    }
+  }
+  /*Shrinking for mobile*/
+  @media (max-width: 768px) {
+    .sg-waves {
+      top: -40px;
+      height:40px;
+      min-height:40px;
+    }
+  }
+  </style>
+</div>  
+  
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'pre') {
+      var add = $('<input id="color-picker" type="color" class="form-control" value="#ffffff">')
+      .val( el.find('.sg-waves-parallax > use:last-child').attr('fill') )
+      .on('input', function () {
+        el.find('.sg-waves-parallax > use:last-child').attr('fill', $(this).val().trim());
+        el.find('#sg-wave-gradient stop:last-child').css('stop-color', $(this).val().trim())
+      });
+      add.data('target', el);
+      sgEditor.addSidebarElement('<label for="color-picker" class="form-label">Primary Color</label>')
+      sgEditor.addSidebarElement(add);
+
+      add = $('<input id="color-picker" type="color" class="form-control" value="#ffffff">')
+      .val( el.find('#sg-wave-gradient stop:first-child').attr('data-color') )
+      .on('input', function () {
+        //el.find('.sg-waves-parallax > use:not(:last-child)').attr('fill', $(this).val().trim());
+        el.find('#sg-wave-gradient stop:first-child').css('stop-color', $(this).val().trim())
+          .attr('data-color', $(this).val().trim())
+      });
+      sgEditor.addSidebarElement('<label for="color-picker" class="form-label">Secondary Color</label>')
+      sgEditor.addSidebarElement(add);
+    }
+  });
+</script>

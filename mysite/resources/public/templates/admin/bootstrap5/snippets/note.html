@@ -1,0 +1,61 @@
+<div class="alert alert-primary sg-block-content" role="alert">
+  A simple primary note — check it out!
+</div>
+<style type="text/css">
+.alert.callout {
+  background-color: transparent !important;
+  border-width: 0px !important;
+  border-left-width: .25rem !important;
+  box-shadow: 0px 0px 0px 1px #e9ecef !important;
+}  
+</style>
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'pre') {
+      //alert or callout
+      var add = $('<div class="btn-group btn-group-sm mb-2 w-100" role="group"><input type="radio" class="btn-check" name="btncall" id="call-button1"><label for="call-button1" class="btn btn-left btn-outline-secondary">Yes</label><input type="radio" class="btn-check" name="btncall" id="call-button2"><label for="call-button2" class="btn btn-right btn-outline-secondary">No</label></div>');
+      add.on('click', '.btn-left', function() {
+        el.find('.sg-block-content').removeClass('callout text-dark');
+      }).on('click', '.btn-right', function() {
+        el.find('.sg-block-content').addClass('callout text-dark');
+      })
+      sgEditor.addSidebarElement('<label class="form-label">Background</label>');
+      sgEditor.addSidebarElement(add);
+
+      //alignment
+      add = $('<div class="btn-group btn-group-sm mb-2 w-100" role="group"><input type="radio" class="btn-check" name="btnradio" id="align-button1"><label for="align-button1" class="btn btn-left btn-outline-secondary">Left</label><input type="radio" class="btn-check" name="btnradio" id="align-button2"><label for="align-button2" class="btn btn-center btn-outline-secondary">Center</label><input type="radio" class="btn-check" name="btnradio" id="align-button3"><label for="align-button3" class="btn btn-right btn-outline-secondary">Right</label></div>');
+      add.on('click', '.btn-left', function() {
+        el.find('.sg-block-content').addClass('text-start').removeClass('text-center text-end');
+      }).on('click', '.btn-center', function() {
+        el.find('.sg-block-content').addClass('text-center').removeClass('text-start text-end');
+      }).on('click', '.btn-right', function() {
+        el.find('.sg-block-content').addClass('text-end').removeClass('text-center text-start');
+      })
+      sgEditor.addSidebarElement('<label class="form-label">Align</label>');
+      sgEditor.addSidebarElement(add);
+
+      //background color
+      add = $('<div class="btn-group btn-group-sm mb-2 w-100" role="group"><input type="radio" class="btn-check" name="bgbtn" id="bg1"><label for="bg1" class="btn btn-outline-primary">P</label><input type="radio" class="btn-check" name="bgbtn" id="bg2"><label for="bg2" class="btn btn-outline-secondary">S</label><input type="radio" class="btn-check" name="bgbtn" id="bg3"><label for="bg3" class="btn btn-outline-success">S</label><input type="radio" class="btn-check" name="bgbtn" id="bg4"><label for="bg4" class="btn btn-outline-danger">D</label><input type="radio" class="btn-check" name="bgbtn" id="bg5"><label for="bg5" class="btn btn-outline-warning">W</label><input type="radio" class="btn-check" name="bgbtn" id="bg6"><label for="bg6" class="btn btn-outline-info">I</label><input type="radio" class="btn-check" name="bgbtn" id="bg7"><label for="bg7" class="btn btn-outline-light">L</label><input type="radio" class="btn-check" name="bgbtn" id="bg8"><label for="bg8" class="btn btn-outline-secondary">D</label></div>');      
+
+      add.on('click', '#bg1', function() {
+        el.find('.alert').addClass('alert-primary').removeClass('alert-secondary alert-success alert-danger alert-warning alert-info alert-light alert-dark');
+      }).on('click', '#bg2', function() {
+        el.find('.alert').addClass('alert-secondary').removeClass('alert-primary alert-success alert-danger alert-warning alert-info alert-light alert-dark');
+      }).on('click', '#bg3', function() {
+        el.find('.alert').addClass('alert-success').removeClass('alert-primary alert-secondary alert-danger alert-warning alert-info alert-light alert-dark');
+      }).on('click', '#bg4', function() {
+        el.find('.alert').addClass('alert-danger').removeClass('alert-primary alert-success alert-secondary alert-warning alert-info alert-light alert-dark');
+      }).on('click', '#bg5', function() {
+        el.find('.alert').addClass('alert-warning').removeClass('alert-primary alert-success alert-danger alert-secondary alert-info alert-light alert-dark');
+      }).on('click', '#bg6', function() {
+        el.find('.alert').addClass('alert-info').removeClass('alert-primary alert-success alert-danger alert-warning alert-secondary alert-light alert-dark');
+      }).on('click', '#bg7', function() {
+        el.find('.alert').addClass('alert-light').removeClass('alert-primary alert-success alert-danger alert-warning alert-info alert-secondary alert-dark');
+      }).on('click', '#bg8', function() {
+        el.find('.alert').addClass('alert-dark').removeClass('alert-primary alert-success alert-danger alert-warning alert-info alert-light alert-secondary');
+      })
+      sgEditor.addSidebarElement('<label class="form-label">Background</label>');
+      sgEditor.addSidebarElement(add);
+    }
+  });
+</script>

@@ -1,0 +1,107 @@
+<nav class="navbar navbar-expand-lg border-0 z-3 sg-block-content" data-observer-classes="fixed-top bg-white text-dark" data-observer-margin="300px">
+  <div class="container px-0">
+    <a class="navbar-brand" href="//{$site.url}"><img class="img-responsive" src="{$site.logo}" style="max-width: 200px;" alt="Site Logo"></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler02" aria-controls="navbarToggler02" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarToggler02" data-sg-id-ref="data-bs-target,aria-controls">
+      <ul class="navbar-nav mb-2 mb-lg-0">
+      {foreach $html.top_menu as $level1}
+      {if $level1.children}
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle {if $level1.active}active{/if}{if $level1.id eq $page_id}{/if}" href="#" id="navbarDropdownMenuLink{$level1@index}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            {$level1.name}
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink{$level1@index}">
+          {foreach $level1.children as $level2}
+            <li><a class="dropdown-item" href="{$level2.slug}">{$level2.name}</a></li>
+          {/foreach}
+          </ul>
+        </li>
+      {else}
+        <li class="nav-item">
+          <a class="nav-link {if $level1.active}active{/if}" href="{$level1.slug}">{$level1.name}</a>
+        </li>
+      {/if}
+      {/foreach}
+      </ul>
+
+    </div>
+  </div>
+  <script type="text/javascript">
+    var observee = document.querySelector('[data-observer-classes]')
+    var topContainerObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(entry => {
+        let target = entry.target.querySelector('[data-observer-classes]');
+        let classes = target.getAttribute('data-observer-classes').trim().split(' ');
+        if (entry.isIntersecting) {
+          target.classList.remove(...classes);
+        } else {
+          target.classList.add(...classes);
+        }
+      })
+    }, {
+      root: null,
+      rootMargin: observee? observee.getAttribute('data-observer-margin') : 0, //only the first specified margin
+      threshold: 0
+    }) 
+    if (observee) {   
+      topContainerObserver.observe(observee.parentNode);
+    }  
+  </script>   
+</nav>
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'pre') {
+      //align menu
+      var add = $('<div class="btn-group mb-2 w-100" role="group"><input type="radio" class="btn-check" name="btnradio" id="align-button1"><label for="align-button1" class="btn btn-left btn-outline-secondary">Left</label><input type="radio" class="btn-check" name="btnradio" id="align-button2"><label for="align-button2" class="btn btn-center btn-outline-secondary">Center</label><input type="radio" class="btn-check" name="btnradio" id="align-button3"><label for="align-button3" class="btn btn-right btn-outline-secondary">Right</label></div>');
+      add.on('click', '.btn-left', function() {
+        el.find('.collapse.navbar-collapse').addClass('justify-content-start').removeClass('justify-content-center justify-content-end');
+      }).on('click', '.btn-center', function() {
+        el.find('.collapse.navbar-collapse').addClass('justify-content-center').removeClass('justify-content-start justify-content-end');
+      }).on('click', '.btn-right', function() {
+        el.find('.collapse.navbar-collapse').addClass('justify-content-end').removeClass('justify-content-center justify-content-start');
+      })
+      //prepend so what comes last, add first
+      sgEditor.addSidebarElement(add, true);
+      sgEditor.addSidebarElement('<label class="form-label">Menu Position</label>', true);
+      //menu to load
+      add = $('<select class="form-select mb-2"></select>').on('change', function () {
+        //we change the editable text at sidebar and trigger keyup to update the editor
+        let found = $(this).parent().find('div[contenteditable="true"]:contains({foreach $html)');
+        if (found) {
+          found.text('{foreach $html.'+ $(this).val().trim().toLowerCase() +'_menu as $level1}{if $level1.children}');
+          found.keyup();
+        }
+      });
+      add.append('<option value=""></option>');
+      add.append('<option value="main">Main</option>');
+      add.append('<option value="top">Top</option>');
+      add.append('<option value="left">Left</option>');
+      add.append('<option value="right">Right</option>');
+      add.append('<option value="bottom">Bottom</option>');
+      add.append('<option value="header">Header</option>');
+      add.append('<option value="footer">Footer</option>');
+
+      add.data('target', el);
+      //prepend so what comes last, add first
+      sgEditor.addSidebarElement(add, true);
+      sgEditor.addSidebarElement('<label class="form-label">Select Menu</label>', true)
+      //distance travelled before adding classes
+      add = $('<div contenteditable="true" aria-multiline="true" class="form-control mb-2"></div>').text($('[data-observer-classes]').attr('data-observer-margin'));
+      add.on('keyup', function () {
+        let val = $(this).text() || 0;
+        el.find('[data-observer-classes]').attr('data-observer-margin', $.isNumeric(val)? val +'px' : val);  
+      });
+      sgEditor.addSidebarElement(add, true);
+      sgEditor.addSidebarElement('<label class="form-label">Distance scrolled before Adding</label>', true);
+      //classes to add when page is scrolled past distance
+      add = $('<div contenteditable="true" aria-multiline="true" class="form-control mb-2"></div>').text($('[data-observer-classes]').attr('data-observer-classes'));
+      add.on('keyup', function () {
+        el.find('[data-observer-classes]').attr('data-observer-classes', $(this).text());  
+      });
+      sgEditor.addSidebarElement(add, true);
+      sgEditor.addSidebarElement('<label class="form-label">Classes to Add when Page scrolled</label>', true);   
+    }
+  });
+</script>

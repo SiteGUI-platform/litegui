@@ -1,0 +1,35 @@
+<div class="accordion accordion-flush text-start sticky-top sg-block-content"> 
+  {function processMenu}
+    {foreach $level AS $level2}
+      {if $level2.id == $page_id}
+        {$active_menu_class = "text-primary" scope="parent"}
+      {else}
+        {if $active_menu_class == "text-primary"}{* the last iteration is current page *}
+          {$next_menu_item = $level2 scope="parent"}
+        {/if}
+        {if ! $next_menu_item}{* stop record prev_item after active and next are found *}
+          {$prev_menu_item = $level2 scope="parent"}
+        {/if}
+        {$active_menu_class = "" scope="parent"}          
+      {/if}   
+  
+      {if $level2.children}
+        <div class="accordion-item border-bottom-0">
+          <h5 class="accordion-header" id="c-header-{$index}-{$level2@index}">
+            <button class="accordion-button collapsed {$active_menu_class} bg-transparent shadow-none px-3 py-2" type="button" data-bs-toggle="collapse" data-bs-target="#c-panel-{$index}-{$level2@index}" aria-expanded="true" aria-controls="c-panel-{$index}-{$level2@index}">
+              {$level2.name}
+            </button>
+          </h5>
+          <div id="c-panel-{$index}-{$level2@index}" class="accordion-collapse collapse" aria-labelledby="c-header-{$index}-{$level2@index}">
+            <div class="accordion-body p-0 ps-3">
+            {processMenu level=$level2.children index={$index}-{$level2@index}}
+            </div>
+          </div>  
+        </div>  
+      {else}
+        <div class="accordion-header px-3 py-1"><a class="{$active_menu_class}" href="{$level2.slug}">{$level2.name}</a></div>
+      {/if}
+    {/foreach}       
+  {/function}
+  {processMenu level=$html.left_menu index=0}   
+</div> 

@@ -1,0 +1,19 @@
+<h2 class="sg-block-content">Heading 2 goes here</h2>
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'pre') {
+      //align heading
+      var add = $('<div class="btn-group mb-2 w-100" role="group"><input type="radio" class="btn-check" name="btnradio" id="align-button1"><label for="align-button1" class="btn btn-left btn-outline-secondary">Left</label><input type="radio" class="btn-check" name="btnradio" id="align-button2"><label for="align-button2" class="btn btn-center btn-outline-secondary">Center</label><input type="radio" class="btn-check" name="btnradio" id="align-button3"><label for="align-button3" class="btn btn-right btn-outline-secondary">Right</label></div>');
+      add.on('click', '.btn-left', function() {
+        el.find('h1.sg-block-content').addClass('text-start').removeClass('text-center text-end');
+      }).on('click', '.btn-center', function() {
+        el.find('h1.sg-block-content').addClass('text-center').removeClass('text-start text-end');
+      }).on('click', '.btn-right', function() {
+        el.find('h1.sg-block-content').addClass('text-end').removeClass('text-center text-start');
+      })
+      //prepend so what comes last, add first
+      sgEditor.addSidebarElement(add, true);
+      sgEditor.addSidebarElement('<label class="form-label">Align</label>', true);
+    }
+  })
+</script>      

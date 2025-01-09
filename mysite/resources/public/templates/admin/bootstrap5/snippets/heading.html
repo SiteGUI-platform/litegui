@@ -1,0 +1,36 @@
+<h1 class="sg-block-content"><span>This is a simple heading</span></h1>
+<script type="text/javascript" class="register">
+  sgScript.register((el, stage) => {
+    if (stage == 'pre') {
+      //align heading
+      var add = $('<div class="btn-group btn-group-sm mb-2 w-100" role="group"><input type="radio" class="btn-check" name="headingbtn" id="heading-h1"><label for="heading-h1" class="btn btn-outline-secondary">H1</label><input type="radio" class="btn-check" name="headingbtn" id="heading-h2"><label for="heading-h2" class="btn btn-outline-secondary">H2</label><input type="radio" class="btn-check" name="headingbtn" id="heading-h3"><label for="heading-h3" class="btn btn-outline-secondary">H3</label><input type="radio" class="btn-check" name="headingbtn" id="heading-h4"><label for="heading-h4" class="btn btn-outline-secondary">H4</label><input type="radio" class="btn-check" name="headingbtn" id="heading-h5"><label for="heading-h5" class="btn btn-outline-secondary">H5</label><input type="radio" class="btn-check" name="headingbtn" id="heading-h6"><label for="heading-h6" class="btn btn-outline-secondary">H6</label></div>');      
+
+      add.on('click', '#heading-h1', function() {
+        el.find('.sg-block-content').children().unwrap().wrap('<h1 class="sg-block-content"/>');
+      }).on('click', '#heading-h2', function() {
+        el.find('.sg-block-content').children().unwrap().wrap('<h2 class="sg-block-content"/>');
+      }).on('click', '#heading-h3', function() {
+        el.find('.sg-block-content').children().unwrap().wrap('<h3 class="sg-block-content"/>');
+      }).on('click', '#heading-h4', function() {
+        el.find('.sg-block-content').children().unwrap().wrap('<h4 class="sg-block-content"/>');
+      }).on('click', '#heading-h5', function() {
+        el.find('.sg-block-content').children().unwrap().wrap('<h5 class="sg-block-content"/>');
+      }).on('click', '#heading-h6', function() {
+        el.find('.sg-block-content').children().unwrap().wrap('<h6 class="sg-block-content"/>');
+      })
+      sgEditor.addSidebarElement('<label class="form-label">Type</label>');
+      sgEditor.addSidebarElement(add);
+
+      add = $('<div class="btn-group btn-group-sm mb-2 w-100" role="group"><input type="radio" class="btn-check" name="alignbtn" id="btn-left"><label for="btn-left" class="btn btn-outline-secondary">Left</label><input type="radio" class="btn-check" name="alignbtn" id="btn-center"><label for="btn-center" class="btn btn-outline-secondary">Center</label><input type="radio" class="btn-check" name="alignbtn" id="btn-right"><label for="btn-right" class="btn btn-outline-secondary">Right</label></div>');
+      add.on('click', '#btn-left', function() {
+        el.find('.sg-block-content').addClass('text-start').removeClass('text-center text-end');
+      }).on('click', '#btn-center', function() {
+        el.find('.sg-block-content').addClass('text-center').removeClass('text-start text-end');
+      }).on('click', '#btn-right', function() {
+        el.find('.sg-block-content').addClass('text-end').removeClass('text-center text-start');
+      })
+      sgEditor.addSidebarElement('<label class="form-label">Align</label>');
+      sgEditor.addSidebarElement(add);      
+    }
+  })
+</script>      
