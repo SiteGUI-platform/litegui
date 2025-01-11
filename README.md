@@ -42,6 +42,8 @@ The following images are available. Please note that all files are compressed an
 
 [LiteGUI 25GB VMWare/VirtualBox image](https://cdn.sitegui.com/public/uploads/site/2/LiteGUI/litegui-vm-disk-25G.vmdk.zip)
 
+The best way to spin up these images and have your LiteGUI environment ready in minutes is to sign up for a LiteGUI VM through https://sitegui.com/store/litegui-hosting, the minimal VM starts from $10/month. You can also download the 25G QEMU image and upload to cloud providers like DigitalOcean to create a LiteGUI VM from the image. DigitalOcean offers free $200 credit (valid for 60 days) for you to try out, here is the signup link https://m.do.co/c/5f276041432e.
+
 For those who wants to install LiteGUI manually on an existing server, you may download the source here and place it outside the webroot (to prevent direct access) and then configure Nginx to serve your website using mysite/src/index.php, the user portal using 
 mysite/src/siteuser.php, the staff portal using mysite/src/siteadmin.php and the static files using the folder mysite/resources/public (see the sample Nginx configuration below). You also need to create a database to load the schema and data provided in the file "sitegui_mysite.sql". After that you can add the database connection credentials and domain information to mysite/src/config.php or config.local.php to complete the installation.
 

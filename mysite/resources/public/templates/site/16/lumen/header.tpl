@@ -26,7 +26,7 @@
 
 {block name="block_header"}
 {$block_header nofilter}
-<nav class="navbar navbar-expand-lg navbar-light border-0 bg-white py-4 z-1 sg-block-content" data-observer-classes-off="" data-observer-margin="300px">
+<nav class="navbar navbar-expand-lg navbar-light border-0 bg-white py-4 z-3 sg-block-content" data-observer-classes-off="" data-observer-margin="300px">
 	<div class="container-md px-0">
 	  <a class="navbar-brand" href="//{$site.url}"><img class="img-responsive" src="{if $site.logo}{$site.logo}{else}{$site.cdn}/{$template}/assets/logo.png{/if}" alt="Site Logo" style="max-width: 200px;"></a>
 	  <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#sg-id-1646279124182" aria-controls="sg-id-1646279124182" aria-expanded="false" aria-label="Toggle navigation">

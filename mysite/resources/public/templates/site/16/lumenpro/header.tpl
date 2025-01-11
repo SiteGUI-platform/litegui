@@ -27,7 +27,7 @@
 {$block_header nofilter}
 <div class="row bg-light mb-2">
 	<div class="col-12">
-		<nav class="navbar navbar-expand-lg navbar-light border-0 bg-white py-2 z-1" data-observer-classes-off="" data-observer-margin="300px">
+		<nav class="navbar navbar-expand-lg navbar-light border-0 bg-white py-2 z-3" data-observer-classes-off="" data-observer-margin="300px">
 			<div class="container">
 			  <a class="navbar-brand" href="//{$site.url}"><img class="img-responsive" src="{if $site.logo}{$site.logo}{else}{$site.cdn}/{$template}/assets/logo.png{/if}" alt="Site Logo" style="max-width: min(200px, 35vw);"></a>
 				<div class="input-group d-none d-lg-flex mx-5 px-5">
