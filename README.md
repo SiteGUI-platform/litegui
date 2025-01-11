@@ -1,9 +1,11 @@
 # SiteGUI CMS aka LiteGUI
 LiteGUI is the nick name of the SiteGUI CMS - a simplified version of the SiteGUI platform that can be used as the starting point to develop the backend for your web/mobile apps. LiteGUI can be used as a complete CMS system or a headless API backend.
 
+https://github.com/user-attachments/assets/457c30a2-6309-470e-975f-c581cbbd4dbe
+
 # Features
 LiteGUI includes the following features:
-1. User and Staff Portal
+1. User and Staff Portal (Social/Oauth Login optional)
 2. Staff & Role RBAC Management			
 3. User Management
 4. User Group Management
@@ -11,8 +13,8 @@ LiteGUI includes the following features:
 6. Pre-made and Custom Apps/Templates (available on SiteGUI Appstore)
 7. CMS
    - Multilingual       
-   - Visual Editor
-   - Widget Editor			
+   - Visual Editor with Drag and Drop support 
+   - Widget Editor to attach Widget content to any predefined layout section 			
    - Menu Editor			
    - File Manager			
    - Template & Layout Editor			
