@@ -39,7 +39,7 @@
             {foreach from=$variant.meta key=name item=value}     {if $name eq downloads}{continue}{/if}
             <div class="col ps-0"><input class="form-control" type="text" name="page[variants][{$index}][@{$name}]" value="{$value}"></div>
             {/foreach}
-            <div class="col-auto pe-2">
+            <div class="col-auto pe-2 sg-variant-controls">
 							<div class="btn-group dropstart">
 							  <button type="button" class="btn btn-sm btn-outline-secondary border rounded-circle {if $variant.shipping.weight OR $variant.shipping.length OR $variant.meta.downloads.0}btn-outline-light text-primary{/if} js-add-shipping" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" data-bs-display="static"><i class="bi bi-{if $page.subtype ne Shipping}download{else}truck{/if}"></i></button>
 							  <div class="dropdown-menu px-2 bg-warning-subtle" style="min-width: 200px; top: -1em">
@@ -143,7 +143,7 @@
             <div class="col ps-0"><input class="form-control" type="text" name="page[variants][0][price]" value=""></div>
             <div class="col ps-0"><input class="form-control" type="text" name="page[variants][0][was]" value=""></div>
             <div class="col ps-0"><input class="form-control" type="text" name="page[variants][0][stock]" value=""></div>
-            <div class="col-auto pe-2">
+            <div class="col-auto pe-2 sg-variant-controls">
 							<div class="btn-group dropstart">
 							  <button type="button" class="btn btn-sm btn-outline-secondary border rounded-circle {if $variant.shipping.weight OR $variant.shipping.length OR $variant.meta.downloads.0}btn-outline-light text-primary{/if} js-add-shipping" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" data-bs-display="static"><i class="bi bi-truck"></i></button>
 							  <div class="dropdown-menu px-2 bg-warning-subtle" style="min-width: 200px; top: -1em">
@@ -615,7 +615,7 @@
 	              rowName = currentVariant.attr('name').replace(/\[sku\]/ig, '['+name+']');
 	              element = $('<input class="form-control" type="text" name="" value="">').attr('name', rowName);//xss handling
 	              element = $('<div class="col"></div').append(element);
-	              $(this).children(":last").prev().before(element);
+	              $(this).children(".sg-variant-controls").before(element);
 	          }    
 	        });
       	}    

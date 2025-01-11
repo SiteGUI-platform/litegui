@@ -43,7 +43,7 @@ if [ $? -eq 0 ]; then
    HASHED=$(php -r "echo password_hash('$PASS', PASSWORD_DEFAULT);")
    TNOW=$(date +%s)
    mysql -u root -e "UPDATE sitegui_mysite.mysite1_user SET email='$EMAIL', password='$HASHED', registered=$TNOW WHERE id=1023;"
-
+   mysql -u root -e "INSERT INTO sitegui_mysite.mysite1_usermeta(user_id, property , value) VALUES (1023, 'onboard_page', 1), (1023, 'onboard_product', 1), (1023, 'onboard_wysiwyg', 1);"
    #Replace domain
    CONFIGURED_FILE="/etc/nginx/acme.sh/.main-domain"
    OLD_DOMAIN=$(cat "$CONFIGURED_FILE" 2>/dev/null)
