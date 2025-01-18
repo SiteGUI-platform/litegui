@@ -76,7 +76,7 @@
 							{$loc.location|capitalize|trans}{if $loc.name}: {$loc.name}{elseif $loc.page_id}#{$loc.page_id}{/if} @ {$loc.section|capitalize|trans} <span class="text-nowrap">(⇅ <input class="border-0" type="number" name="widget[placements][{$loc.id}]" value="{$loc.sort}" maxlength="3" min="-100" max="999">)</span>
 						</div>	 
 					{foreachelse}
-						{"No results found"|trans}!		
+						{"No records found"|trans}!		
 					{/foreach}
 					{if $widget.locations}
 						<div class="d-grid mt-4">

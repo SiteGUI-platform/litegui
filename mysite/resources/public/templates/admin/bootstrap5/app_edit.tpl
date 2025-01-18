@@ -56,7 +56,7 @@
       {if $language@first OR !$app.hide.locales}
         {if $language@first} 
           {*$subapp2.fields = []*} {*<!--Dont display subapp's custom fields for other languages as they work with 1 lang atm-->*}
-          {capture "{$name2}_{$first_lang}"}
+          {capture "{$name2}_{$lang}"}
           {$colwidth = 7}
           {$smarty.block.parent} {*<!-- insert sub fields and then set var back to parent page -->*}    
           {/capture}
@@ -147,7 +147,7 @@
        ($api.app.sub.$name.entry == creator_readonly AND $api.page.creator AND $api.page.creator != $user.id) OR  
        ($api.app.sub.$name.entry == other_readonly AND $api.page.creator == $user.id) 
     } {* display input fields if not readonly *}
-      {if $smarty.capture["{$name}_{$first_lang}"]}
+      {if $smarty.capture["{$name}_{$site.language}"]}
         <!-- if $api.page.id use datatable.tpl directly -->
         <div class="ps-2 mb-4 {if $api.page.id AND $api.app.sub.$name.display != flat}d-none{/if}">
           <button class="btn btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-sub-{$name}" aria-expanded="false" aria-controls="collapse-sub-{$name}">{"New :item"|trans:['item' => $api.app.sub.$name.alias|default:($name|replace:'_':' ')]}</button>
@@ -169,7 +169,7 @@
       <div class="d-none" id="collapse-sub-{$name}-wrapper">
         {foreach $site.locales as $lang => $language}
           {if $language@first}
-            {$smarty.capture["{$name}_{$first_lang}"] nofilter}
+            {$smarty.capture["{$name}_{$lang}"] nofilter}
           {*elseif !$subapp.hide.locales}
             <button class="btn btn-outline-primary m-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-subapp-{$lang}" aria-expanded="false" aria-controls="collapse-subapp-{$lang}">{$language}</button>
             <div class="collapse collapse-placeholder" id="collapse-subapp-{$lang}">

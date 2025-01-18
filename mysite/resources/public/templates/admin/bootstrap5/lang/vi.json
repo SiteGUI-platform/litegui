@@ -545,7 +545,7 @@
 "Placement": "Thứ tự",
 "Found 1 result for": "Tìm thấy 1 kết quả cho",
 "Found :count results for": "Tìm thấy :count kết quả cho",
-"No results found": "Không có kết quả nào",
+"No records found": "Không có kết quả nào",
 ":Item Name": "Tên :Item",
 "//": "admin/bootstrap5/inventory_edit.tpl",
 "Direction": "Hướng",

@@ -89,6 +89,7 @@ class Worker {
 	}	
 	protected function runJob($job, $user_id, $queue = 'client'){
 		ob_start(); //suppress header produced by controller_run()  
+		$_SESSION = []; //reset before each run
         if ($queue == 'staff'){
 			$user = new StaffWorker($this->config, $this->dbm, $this->router, $this->view, $this->passport);
         } else {

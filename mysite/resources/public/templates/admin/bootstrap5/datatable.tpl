@@ -627,9 +627,9 @@
 				    		<div class="col-auto col-sm-4 pb-2 pb-sm-0">\
 				    			<h5 class="{if !$forapp}mt-2{/if} text-success sg-app-header">\
 				    				{if !$forapp}\
-											<i class="sg-app-icon fs-4 ps-sm-2 pe-3 text-primary float-start bi \
+											<i class="sg-app-icon fs-4 ps-sm-2 pe-3 text-primary bi \
 					    				{if $links.edit AND !$html.app_readonly}bi-plus-circle-dotted\" data-url="{$links.edit}{$links.edit2}?sgframe=1" data-title="{"New :item"|trans:["item" => $html.app_label] }" data-bs-toggle="modal" data-bs-target="#dynamicModal\
-					    				{else}bi-list-ol{/if}" role="button"></i>\
+					    				{else}bi-list-ol float-start{/if}" role="button"></i>\
 					    				<span class="sg-app-name">{$html.app_label_plural}\
 				    						{if !$system.sgframe}<i class="js-sg-expand sg-app-configure bi bi-arrows ps-2 fs-6 text-secondary" role="button"></i>{/if}\
 				    						{if $links.configure}<i class="sg-app-configure bi bi-gear ps-2 fs-6 text-secondary" data-url="{$links.configure}" data-title="{"Configure :item"|trans:["item" => $html.app_label] }" data-bs-toggle="modal" data-bs-target="#dynamicModal" role="button"></i>\
@@ -660,6 +660,8 @@
 		        actionDropDown: '<div class="{{css.dropDownMenu}}"><button class="btn border dropdown-toggle" type="button" data-bs-toggle="dropdown"><span class="{{css.dropDownMenuText}}">{{ctx.content}}</span> <span class="caret"></span></button><ul class="{{css.dropDownMenuItems}}" role="menu"></ul></div>',
 
 			    	paginationItem: '<li class="paginate_button page-item {{ctx.css}}"><a data-page="{{ctx.page}}" class="{{css.paginationButton}}">{{ctx.text}}</a></li>',
+
+			    	noResults: '<tr><td colspan="{{ctx.columns}}" class="no-results text-body-secondary opacity-50 py-5 border-0"><i class="bi bi-collection fs-1 mb-3"></i><br>{{lbl.noResults}}</td></tr>',
 			    },
 			    css: {
 			      icon: "icon bi",
@@ -679,7 +681,7 @@
 			    labels: {
             infos: "{{ctx.start}}-{{ctx.end}} / {{ctx.total}}",
 				    {/literal} {*/*}
-            noResults: "{'No results found'|trans}",
+            noResults: "{'No records found'|trans}",
             search: "{'Search'|trans}",
             all: "{'All'|trans}"
           },  
@@ -735,12 +737,15 @@
 							}
 							$('.sg-app-name').text($label)
 							if ( ajaxResponse.html && ajaxResponse.links.configure && ajaxResponse.links.configure ){ //configurable
-								$('.sg-app-name').append(
-									$('<i class="sg-app-configure bi bi-gear ps-2 fs-6 text-secondary" data-bs-toggle="modal" data-bs-target="#dynamicModal" role="button"></i>')
+								$('.sg-app-name')
+									.append('<i class="js-sg-expand sg-app-configure bi bi-arrows ps-2 fs-6 text-secondary" role="button"></i>')
+									.append(
+										$('<i class="sg-app-configure bi bi-gear ps-2 fs-6 text-secondary" data-bs-toggle="modal" data-bs-target="#dynamicModal" role="button"></i>')
 										.attr('data-url', ajaxResponse.links.configure)
 										.attr('data-title', Sitegui.trans('Configure :item', {
 											"item": ajaxResponse.html.app_label
-										}))
+										})
+									)
 								)
 							}
 							$(ev.target).addClass('active rounded')
@@ -1232,7 +1237,7 @@
 			sgView.initListener("#{$table}")
 		{/if} {*/*}			
 		//subapp new button
-		{if $forapp AND $smarty.capture["{$forapp}_{$system.language}"]}
+		{if $forapp AND $smarty.capture["{$forapp}_{$site.language}"]}
 	    {if $api.app.sub.$forapp.entry == multiple OR $api.app.sub.$forapp.entry == single OR 
 	    		$api.app.sub.$name.entry == quick OR 
 	       ($api.app.sub.$forapp.entry == client_readonly AND $html.file_manager) OR

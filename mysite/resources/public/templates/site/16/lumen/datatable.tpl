@@ -597,6 +597,7 @@
 		        actionDropDown: '<div class="{{css.dropDownMenu}}"><button class="btn border dropdown-toggle" type="button" data-bs-toggle="dropdown"><span class="{{css.dropDownMenuText}}">{{ctx.content}}</span> <span class="caret"></span></button><ul class="{{css.dropDownMenuItems}}" role="menu"></ul></div>',
 
 			    	paginationItem: '<li class="paginate_button page-item {{ctx.css}}"><a data-page="{{ctx.page}}" class="{{css.paginationButton}}">{{ctx.text}}</a></li>',
+			    	noResults: '<tr><td colspan="{{ctx.columns}}" class="no-results text-body-secondary opacity-50 py-5 border-0"><i class="bi bi-collection fs-1 mb-3"></i><br>{{lbl.noResults}}</td></tr>',
 			    },
 			    css: {
 			      icon: "icon bi",
@@ -616,7 +617,7 @@
 			    labels: {
             infos: "{{ctx.start}}-{{ctx.end}} / {{ctx.total}}",
 				    {/literal} {*/*}
-            noResults: "{'No results found'|trans}",
+            noResults: "{'No records found'|trans}",
             search: "{'Search'|trans}",
             all: "{'All'|trans}"
           }, 

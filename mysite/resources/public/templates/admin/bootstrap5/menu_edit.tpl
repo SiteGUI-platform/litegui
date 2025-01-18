@@ -177,7 +177,7 @@
 						<a href="#" class="float-end" data-url='{$links.delete_location}' data-name="id" data-value="{$loc.id}" data-confirm="delete" data-remove="#loc{$loc.id}"><i class="bi bi-x-circle text-danger"></i></a><br />
 					</div>	 
 				{foreachelse}
-					{"No results found"|trans}!		
+					{"No records found"|trans}!		
 				{/foreach}       	
 	       </div>
 	    </div>

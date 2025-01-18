@@ -40,7 +40,7 @@ class Activity {
 				return $query->where('page.creator', $this->user->getId());
 			})
 			->select('page.id', 'page.message', 'page.app_type', 'page.level', 'page.created', 'page.processed', 'page.retry', 'page.meta');
-		$block = $this->prepareMain($query, ['app_columns' => ['creator' => 1]], true);//show HTML tag, 'strip_tags');
+		$block = $this->prepareMain($query, ['app_columns' => !empty($_REQUEST['guest'])? [] : ['creator' => 1 ]], true);//show HTML tag, 'strip_tags');
 	
 		if ( $block['api']['total'] ){
 			if ($this->view->html){				
@@ -59,10 +59,14 @@ class Activity {
 				if ( !empty($_REQUEST['for']) ){
 					unset($block['html']['table_header']['app_type'], $block['html']['table_header']['meta']);
 				}
+				if ( !empty($_REQUEST['guest']) ){
+					unset($block['html']['table_header']['creator']);
+				}
 				$block['html']['column_type']['created'] = 'time';
 				$block['html']['column_type']['processed'] = 'time';
 
-				$block['links']['api'] = $this->slug($this->class .'::main');
+				$block['links']['custom_api'] = $this->slug($this->class .'::main') .'.json?html=1&guest='. ($_REQUEST['guest']??0);
+
 				$block['links']['edit'] = $this->slug($this->class .'::action', ["action" => "edit"] );
 				$block['template']['file'] = "datatable";		
 			}
@@ -90,26 +94,45 @@ class Activity {
 	 */
 	public function edit($id = 0){
 		if ( $this->user->has($this->requirements['VIEW']) ){
-			$block['api']['activity'] =  $this->db
+			$activity = $this->db
 				->table($this->table .' AS page')
 				->where('id', $id)
-				->select('page.id', 'page.app_type AS app', 'page.level', 'page.message', 'page.creator', 'page.created', 'page.processed', 'page.retry', 'page.meta')
+				->select('page.id', 'page.app_type AS app', 'page.app_id', 'page.level', 'page.message', 'page.creator', 'page.creator AS creator_name', 'page.created', 'page.processed', 'page.retry', 'page.meta')
 				->first();
 
-			if ( !empty($block['api']['activity']['creator']) ){
-				$creator = $this->lookupUsers($block['api']['activity']['creator']);
-				$block['api']['activity']['creator_name'] = $creator[0]['name']??'';
-				$block['api']['activity']['creator_avatar'] = $creator[0]['image']??'';
-				$block['api']['activity']['meta'] = json_decode($block['api']['activity']['meta']??'', true);
+			if ($activity['created']){
+				$activity['created'] = date("M d, Y H:i", $activity['created']);	
+			}
+			if ($activity['processed']){
+				$activity['processed'] = date("M d, Y H:i", $activity['processed']);	
+			}	
+
+			if ( !empty($activity['creator']) ){
+				$creator = $this->lookupUsers($activity['creator'])?: $this->lookupAdmins($activity['creator']);
+				$activity['creator_name'] = $creator[0]['name']??'';
+				$activity['meta'] = json_decode($activity['meta']??'', true);
 			}
 
 			if ($this->view->html){				
-				$block['links']['creator'] = $this->slug('User::action', ['action' => 'edit']);
-				header('Content-Type: application/json; charset=utf-8'); 
-				print_r($block['api']['activity']); exit;
-				//$block['template']['file'] = "page_wysiwyg";		
+				$block['links']['main'] = $this->slug($this->class .'::main');
+				if ( $activity['app_id'] ){
+					$block['html']['ref'] = $activity['app'] .' #'. $activity['app_id'];
+					if ( str_ends_with($activity['app'], '.') ){
+						$block['links']['ref'] = $this->slug(trim($activity['app'], '.') .'::action', [
+							'action' => 'edit',
+							'id' => $activity['app_id']
+						]);
+					} else {
+						$block['links']['ref'] = $this->slug('App::action', [
+							'action' => 'edit',
+							'id' => strtolower($activity['app']) .'/'. $activity['app_id']
+						]);
+					}
+				}	
+				$activity = print_r($activity, true);
+				$block['template']['file'] = 'activity_edit';
 			}
-
+			$block['api']['activity'] = $activity;
 			$this->view->addBlock('main', $block, $this->class .'::edit');
 		} else {
 			$this->denyAccess($id? 'edit' : 'create');			

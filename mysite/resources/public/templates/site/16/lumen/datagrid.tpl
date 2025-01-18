@@ -161,7 +161,7 @@
                 </div>
                 {/block}    
             {foreachelse}
-                <div class="col text-center">{'No results found'|trans}!</div>
+                <div class="col text-center text-body-secondary opacity-50 py-5"><i class="bi bi-collection fs-1 mb-3"></i><br>{'No records found'|trans}!</div>
             {/foreach}
             </div>
             {block name="content_bottom"}{$content_bottom nofilter}{/block}

@@ -22,7 +22,7 @@
     {elseif $api.total}
       {'Found :count results for'|trans:['count' => $api.total]} <b>{$html.searchPhrase}</b>
     {else}
-      {'No results found'|trans}!
+      {'No records found'|trans}!
     {/if}
     </div>
   {/if}
