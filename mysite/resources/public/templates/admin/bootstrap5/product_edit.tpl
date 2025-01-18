@@ -27,7 +27,7 @@
             <div class="col-auto px-0"><i class="bi bi-grip-vertical text-black-50" aria-hidden="true"></i>
             	<input type="hidden" name="page[variants][{$index}][id]" value="{$variant.id}"></div>
             <div class="col-1 ps-0">
-							<img src="{$variant.images.0|default:'https://via.placeholder.com/120x80/5a5c69/fff?text=Add%20Image'}" class="btn img-thumbnail thumbnail-small p-0" data-bs-toggle="collapse" data-bs-target="#v{$index}images" title="{'Add Images'|trans}">
+							<img src="{$variant.images.0|default:'https://cdn.sitegui.com/public/templates/admin/bootstrap5/assets/img/add_image.svg'}" class="btn img-thumbnail thumbnail-small p-0" data-bs-toggle="collapse" data-bs-target="#v{$index}images" title="{'Add Images'|trans}">
             </div>
             <div class="col-2 ps-0"><input class="form-control" type="text" name="page[variants][{$index}][sku]" value="{$variant.sku}"></div>
             <div class="col ps-0"><input class="form-control" type="text" name="page[variants][{$index}][price]" value="{$variant.price}"></div>
@@ -41,9 +41,9 @@
             {/foreach}
             <div class="col-auto pe-2 sg-variant-controls">
 							<div class="btn-group dropstart">
-							  <button type="button" class="btn btn-sm btn-outline-secondary border rounded-circle {if $variant.shipping.weight OR $variant.shipping.length OR $variant.meta.downloads.0}btn-outline-light text-primary{/if} js-add-shipping" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" data-bs-display="static"><i class="bi bi-{if $page.subtype ne Shipping}download{else}truck{/if}"></i></button>
+							  <button type="button" class="btn btn-sm btn-outline-secondary border rounded-circle {if $variant.shipping.weight OR $variant.shipping.length OR $variant.meta.downloads.0}btn-outline-light text-primary{/if} js-add-shipping" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" data-bs-display="static"><i class="bi bi-{if $page.subtype && $page.subtype ne Shipping}download{else}truck{/if}"></i></button>
 							  <div class="dropdown-menu px-2 bg-warning-subtle" style="min-width: 200px; top: -1em">
-							  	<div class="row g-2 download-options {if $page.subtype eq Shipping}d-none{/if}" id="v{$index}downloads" style="min-width: 400px;">
+							  	<div class="row g-2 download-options {if !$page.subtype || $page.subtype eq Shipping}d-none{/if}" id="v{$index}downloads" style="min-width: 400px;">
 								  	<div class="col-12 text-center">{"Download Sources"|trans}</div>
 							    	{foreach $variant.meta.downloads AS $path} {if !$path}{continue}{/if}
 							    	<div class="col-12 js-download-container variant sg-hover position-relative px-0 rounded-2">
@@ -62,7 +62,7 @@
 											<button class="btn border-0 position-absolute end-0 top-50 translate-middle-y pe-sm-4 sg-hover-visible" type="button" data-confirm="delete"><i class="bi bi-x-circle-fill"></i></button>
 								  	</div>
 								  </div>	
-							    <div class="row g-2 shipping-options {if $page.subtype ne Shipping}d-none{/if}">
+							    <div class="row g-2 shipping-options {if $page.subtype && $page.subtype ne Shipping}d-none{/if}">
 							      <div class="col-6">
 							      	<div class="form-floating">
 											  <input type="text" class="form-control" name="page[variants][{$index}][shipping][weight]" value="{$variant.shipping.weight}" placeholder="{'W'|trans}">
@@ -138,7 +138,7 @@
           {foreachelse}
           <div class="variant row mx-0 py-3 border-bottom align-items-center position-relative sg-hover">
             <div class="col-auto px-0"><i class="bi bi-grip-vertical text-black-50" aria-hidden="true"></i></div>
-            <div class="col-1 ps-0"><img src="https://via.placeholder.com/120x80/5a5c69/fff?text=Add%20Image" class="btn img-thumbnail thumbnail-small p-0" data-bs-toggle="collapse" data-bs-target="#v0images" title="{'Add Images'|trans}"></div>
+            <div class="col-1 ps-0"><img src="https://cdn.sitegui.com/public/templates/admin/bootstrap5/assets/img/add_image.svg" class="btn img-thumbnail thumbnail-small p-0" data-bs-toggle="collapse" data-bs-target="#v0images" title="{'Add Images'|trans}"></div>
             <div class="col-2 ps-0"><input class="form-control" type="text" name="page[variants][0][sku]" value=""></div>
             <div class="col ps-0"><input class="form-control" type="text" name="page[variants][0][price]" value=""></div>
             <div class="col ps-0"><input class="form-control" type="text" name="page[variants][0][was]" value=""></div>
@@ -507,7 +507,7 @@
 					</div>
 				</div>	
 			 	{/if}	
-				<div class="form-group row mb-3 shipping-options {if $page.subtype ne Shipping}d-none{/if}">
+				<div class="form-group row mb-3 shipping-options {if $page.subtype && $page.subtype ne Shipping}d-none{/if}">
 					<label class="col-sm-3 col-form-label text-sm-end">{"Shipping Surcharge/Discount"|trans}</label>
 					<div class="col-sm-7">
 						<input class="form-control" name="page[meta][shipping_fee]" value="{$page.meta.shipping_fee}">
@@ -634,7 +634,7 @@
 	      newRow  = lastRow.clone();
 	      newRow.attr("id", "variant" + newIndex)
 	      	  	.find('[data-bs-toggle="collapse"]').attr("data-bs-target", "#v" + newIndex + "images")
-	      	  								   .attr("src", "https://via.placeholder.com/120x80/5a5c69/fff?text=Add%20Image");
+	      	  								   .attr("src", "https://cdn.sitegui.com/public/templates/admin/bootstrap5/assets/img/add_image.svg");
 	      newRow.find('.collapse').attr("id", "v" + newIndex + "images")
 	      	  	.find('.carousel-inner').children().remove(); //remove current images
 	      newRow.find('.get-image-callback').attr('data-name', 'page[variants]['+newIndex+'][images][]')
@@ -665,7 +665,7 @@
 	      newRow = row.clone();
 	      newRow.attr("id", "variant" + newIndex)
 	      	  	.find('[data-bs-toggle="collapse"]').attr("data-bs-target", "#v" + newIndex + "images")
-	      	  	//temporary for HT copy .attr("src", "https://via.placeholder.com/120x80/5a5c69/fff?text=Add%20Image");
+	      	  	//temporary for HT copy .attr("src", "https://cdn.sitegui.com/public/templates/admin/bootstrap5/assets/img/add_image.svg");
 	      newRow.find('.collapse').attr("id", "v" + newIndex + "images")
 	      	  	//.find('.carousel-inner').children().remove(); //remove current images
 	      newRow.find('.get-image-callback').attr('data-name', 'page[variants]['+newIndex+'][images][]')

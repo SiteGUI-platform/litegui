@@ -612,7 +612,7 @@
                   control.find(".removable-handler").on('click', function() { 
                       //var parent = $(this).parent().parent().parent();
                       if ($(this).siblings('.star-handler').hasClass('active')) { //default image
-                          var img = (container.next().find('img').attr('src'))? container.next().find('img').attr('src') : 'https://via.placeholder.com/120x80/5a5c69/fff?text=Add%20Image';
+                          var img = (container.next().find('img').attr('src'))? container.next().find('img').attr('src') : 'https://cdn.sitegui.com/public/templates/admin/bootstrap5/assets/img/add_image.svg';
                           parent.closest('.variant')
                              .find('[data-bs-toggle="collapse"]').attr('src', img);
                       }

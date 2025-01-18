@@ -115,7 +115,7 @@ class Notification {
 				}
 			} else {
 				$status['result'] = "error";
-				$status['message'][] = $this->trans('No results found');
+				$status['message'][] = $this->trans('No records found');
 				
 				if ($this->view->html){				
 					$status['html']['message_type'] = 'info';
@@ -223,6 +223,10 @@ class Notification {
 		    $this->config['lang_bk'] = $this->config['lang'];		    
 		    //Recipients
 	    	if ( !empty($users['email']) OR !empty($users['mobile']) ){ //single user - include recipient name
+		    	//stop processing if no phone/email is present
+		    	if ( empty($users['mobile']) ) $email_only = true; 
+		    	if ( $email_only AND empty($users['email']) ) return;
+
 		    	if ( empty($data['recipient']) ){
 			    	$data['recipient'] = $users['name']??''; //only for single user		    		
 		    	}
@@ -239,14 +243,20 @@ class Notification {
 	    			??$data['name']
 	    			??null; //($for && !is_array($name))? ': '. $for : ''; 
 	    	} elseif (is_array($users) ){ //multiple users - generic message, no recipient name
-		    	foreach ($users as $u) {
+		    	foreach ($users as $i => $u) {
 	    			$lang = !empty($u['language'])? $u['language'] : $site_locale;
+		    		if ( !empty($u['mobile']) ){
+			    		$batches[ $lang ]['to_mobile'][] = $u['mobile'];
+			    		$has_mobile = true;	    			
+		    		} 
 		    		if ( !empty($u['email']) ){
 						$batches[ $lang ]['to_bcc'][] = $u['email'];
+						$has_email = true;
+		    		} elseif ($email_only OR empty($u['mobile']) ){
+		    			unset($user[ $i ]); //remove from queue
+		    			continue;
 		    		}
-		    		if ( !empty($u['mobile']) ){
-			    		$batches[ $lang ]['to_mobile'][] = $u['mobile'];	    			
-		    		} 	
+	
 					if ( !isset($batches[ $lang ]['body']) ){
 						$batches[ $lang ]['body'] = $this->fetch($template .'.tpl', $data, $lang);
 						$batches[ $lang ]['subject'] = $this->trans($data['subject']);
@@ -256,10 +266,14 @@ class Notification {
 			    			??null;
 					}	
 		    	}
+		    	//stop processing if no phone/email is present
+		    	if ( empty($has_mobile) ) $email_only = true;
+		    	if ( $email_only AND empty($has_email) ) return;
 		    }
 
 			$success = 0;
 			foreach ($cfg['channels'] AS $app => $channel){
+				$response = [];
 				$app = $this->getAppInfo($app, 'Notification');
 				if ($app){
 					$this->checkActivation($app['class']);
@@ -278,6 +292,9 @@ class Notification {
 
 						if ( method_exists($instance, 'email') ){//email based	
 					    	foreach ($batches??[] as $batch) {
+								if (empty($batch['to_mail']) AND empty($batch['to_bcc'])){
+					    			continue;
+					    		}
 					    		if ( !empty($batch['subject2']) ){ 
 					    			$batch['subject'] .= ': '. $batch['subject2'];
 					    		}
@@ -347,9 +364,10 @@ class Notification {
 				$callable['log_id'] = $run; //$run = $log_id when retrying, false as 1st run
 				$callable['target'] = $this->class .'::'. __FUNCTION__;
 				$callable['params'] = [ $users, $subject, $template, $data, $email_only]; //log_id added as $run by retry worker
-			    $this->logPendingJob($callable); //for retrying later
+			    $this->logPendingJob($callable, $this->class .'.', $data['id']??null); //for retrying later
 			} else {
 				//logActivity
+	        	$this->logActivity($response['message']??$data['subject'], $this->class .'.', null, 'Info', $return);
 				if (is_numeric($run)){ //retry with log_id
 					$this->markPendingJobDone($run);
 				}	
@@ -390,7 +408,7 @@ class Notification {
 					$callable['log_id'] = $run; //$run = $log_id when retrying, false as 1st run
 					$callable['target'] = $this->class .'::'. __FUNCTION__;
 					$callable['params'] = [ $users, $subject, $template, $data];
-				    $this->logPendingJob($callable); //for retrying later
+				    $this->logPendingJob($callable, $this->class .'.', $data['id']??null); //for retrying later
 	    		} else {
 	    			if (is_numeric($run)){ //retry with log_id
 						$this->markPendingJobDone($run);

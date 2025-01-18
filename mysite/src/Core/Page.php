@@ -1076,7 +1076,11 @@ class Page {
 		$result['type'] = (($page['type']??null) == 'Link')? 'Link' : $this->class;
 
 		if (!empty($page['subtype'])) { //only add/update it if not empty
-			$result['subtype'] = $this->formatAppName($page['subtype']);
+			if (str_contains($page['subtype'], '::')){
+				$result['subtype'] = $this->formatAppName(strtok($page['subtype'], '::')) .'::'. $this->formatAppName(strtok('::'));
+			} else {
+				$result['subtype'] = $this->formatAppName($page['subtype']);
+			}
 		} 
 
 		if ( !empty($page['slug']) ){

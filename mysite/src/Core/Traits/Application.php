@@ -233,6 +233,25 @@ trait Application {
 			}
 		}
 	}
+	//Lookup Users by Group Name ie: Frequent_Flyer, often lookup by permission Group::Frequent_Flyer
+	protected function lookupGroupUsers($group) {
+		$users = $this->db
+			->table($this->table_user .' AS user')
+			->join(str_replace('_user', '_config', $this->table_user) .' AS meta', 'meta.object', '=', 'user.id')
+			->join(str_replace('_user', '_config', $this->table_user) .' AS config', 'meta.property', '=', 'config.id')
+			->where('config.value', $group)
+			->where('config.type', 'db')
+			->where('config.object', 'Group')
+			->where('meta.type', 'group')
+			->where('meta.value', 'Active')
+			->where('user.status', 'Active')
+			->select('user.id', 'user.name', 'user.email', 'user.mobile', 'user.image', 'user.language')
+			->get()
+			->all();
+		if ($users) {
+			return array_column($users, NULL, 'id'); //re-index id=>record
+		}	
+	}
 	//Lookup name and email of staff specified by email
 	protected function lookupAdminByEmail($email) {
 		if ($email) {
@@ -784,6 +803,7 @@ trait Application {
 	            'app_type' => $app_type,
 	            'app_id' => $app_id,
 	            'level' => $this->user->isStaff()? 'Staff' : 'Client',
+	            'message' => 'Queue',
 	            'creator' => $this->user->getId(),
 	            'created' => time(),
 	            'retry' => 0,
@@ -863,7 +883,7 @@ trait Application {
 					}
 				}
 				//if no column 'name', use the 2nd column for search, 1st is usually id
-				return $query->where(explode(' AS ', $query->columns[1])[0], 'LIKE', $search)->where('a', 1);
+				return $query->where(explode(' AS ', $query->columns[1])[0], 'LIKE', $search);
 			});
 			$block['html']['searchPhrase'] = $_REQUEST['searchPhrase'];
 		}
