@@ -102,7 +102,9 @@ class App extends Page {
 							$block['html']['ajax'] = 1;
 						}							
 						if ( !empty($app['app_sub']) ) {
-							$block['html']['subapps'] = implode(', ', array_keys($app['app_sub']));
+							foreach($app['app_sub'] AS $a => $v){
+								$block['html']['subapps'][ $a ] = $this->trans($v['alias']?: $this->formatAppLabel($a));
+							}
 						}
 						if ( !empty($app['app_tick']['params']) ) {
 							$block['html']['app_tick'] = $app['app_tick'];
@@ -214,6 +216,13 @@ class App extends Page {
 					}
 					if ($this->view->html){				
 						//force display using table
+						if ( !empty($app['app_sub']) ) {
+							foreach($app['app_sub'] AS $a => $v){
+								if ($v['display'] != 'client_hidden'){
+									$block['html']['subapps'][ $a ] = $this->trans($v['alias']?: $this->formatAppLabel($a));
+								}
+							}
+						}
 						$block['template']['file'] = "datatable";		
 						$block['html']['title'] = $this->trans($this->pluralize($app['label']));
 						$block['html']['display'] = 'table';
@@ -346,231 +355,232 @@ class App extends Page {
 			} else { 
 				$response = $this->appProcess($app, 'edit', $page);	
 
-				if ( empty($response['blocks']) ){
+				if ( empty($response['result']) || $response['result'] == 'error' ){
 					$status['result'] = 'error';
-					$status['message'][] = $this->trans('Invalid response from app');
-				}
-				//wysiwyg frame needs page content only	//App does not enable Wysiwyg
-				if ( !empty($_REQUEST['frame']) AND $_REQUEST['frame'] == 'wysiwyg' ){
-					$this->view->setLayout('blank');
-					if ( !empty($app['app_hide']['wysiwyg']) ){
-						$status['result'] = 'error';
-						$status['message'][] = $this->trans('Visual mode is not enabled');
-					} else {						
-						$block['template']['file'] = "page_wysiwyg";
-						$block['api']['page'] = $response['blocks']['main']['api']['page']?? '';
+					$status['message'][] = $response['message']??$this->trans('Invalid response from app');
+				} else {
+					//wysiwyg frame needs page content only	//App does not enable Wysiwyg
+					if ( !empty($_REQUEST['frame']) AND $_REQUEST['frame'] == 'wysiwyg' ){
+						$this->view->setLayout('blank');
+						if ( !empty($app['app_hide']['wysiwyg']) ){
+							$status['result'] = 'error';
+							$status['message'][] = $this->trans('Visual mode is not enabled');
+						} else {						
+							$block['template']['file'] = "page_wysiwyg";
+							$block['api']['page'] = $response['blocks']['main']['api']['page']?? '';
 
-						$links['widget'] = $this->slug('Widget::preview');
-						$links['widget'] .= '?cors='. @$this->hashify($links['widget'] .'::'. $_SESSION['token']);
+							$links['widget'] = $this->slug('Widget::preview');
+							$links['widget'] .= '?cors='. @$this->hashify($links['widget'] .'::'. $_SESSION['token']);
 
-						$links['snippet'] = $this->slug('Template::snippet');
-						$links['snippet'] .= '?cors='. @$this->hashify($links['snippet'] .'::'. $_SESSION['token']);
-						
-						$links['genai'] = $this->slug('Assistant::action', ['action' => 'generate']);
-						$links['genai'] .= '?cors='. @$this->hashify($links['genai'] .'::'. $_SESSION['token']);
-						$block['links'] = $links;						
-
-						//get available widgets
-						$widgets = $this->db
-							->table($this->site_prefix ."_widget")
-							->where('type', '<>', 'Latest')
-							->where('type', '<>', 'Site::Report')
-							->select('id', 'name', 'type')
-							->get()->all();	
-						foreach ($widgets as $widget) {
-							$group[ $widget['type'] ]['name'] = $widget['type'];
-							$group[ $widget['type'] ]['snippets'][] = $widget;
-						}
-						$block['api']['widgets'] = !empty($group)? $group : [];
-						$this->view->addBlock('main', $block, 'App::'. $app['name'] .'::wysiwyg');		
+							$links['snippet'] = $this->slug('Template::snippet');
+							$links['snippet'] .= '?cors='. @$this->hashify($links['snippet'] .'::'. $_SESSION['token']);
 							
-						$next_actions['Template::getSnippets'] = [];
-					}	
-				} elseif ( empty($_REQUEST['subapp']) ) { //normal app edit - wont need if subapp is specified
-					//let hooks change $response['blocks'], hook definition must also use references. Hook may change blocks directly or return to be added by runHook
-					$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ], false, 'add_blocks');
-					foreach ( ($response['blocks']??[]) as $section => $block) {
-						if ($section == 'main'){
-						  	//combine stored app config	with config from app at run time only - keep $app intact 
-						  	//combine stored app_hide with response app.hide, builder config is preferred 
-							$block['api']['app']['hide'] = ($app['app_hide']??[]) + ($block['api']['app']['hide']??[]); 
-							//Hide published button if does not have permission
-							if ( (!$this->user->has($this->requirements['PUBLISH']) OR !$is_supervisor) AND empty($app['app_enable']['versioning']) ){
-								$block['api']['app']['hide']['published'] = 1;
-							} 
-						  	//combine stored app_fields with response app.fields, before adding meta value	
-						  	$fields = ($app['app_fields']??[]) + ($block['api']['app']['fields']??[]);
-						  	unset($block['api']['app']['fields']); //block fields should be appended
+							$links['genai'] = $this->slug('Assistant::action', ['action' => 'generate']);
+							$links['genai'] .= '?cors='. @$this->hashify($links['genai'] .'::'. $_SESSION['token']);
+							$block['links'] = $links;						
 
-							//find parent source after $fields to remove related fields
-							if ( !empty($page['id']) ){
-								$block['api']['parent'] = $this->getParentPage($page, $fields);
+							//get available widgets
+							$widgets = $this->db
+								->table($this->site_prefix ."_widget")
+								->where('type', '<>', 'Latest')
+								->where('type', '<>', 'Site::Report')
+								->select('id', 'name', 'type')
+								->get()->all();	
+							foreach ($widgets as $widget) {
+								$group[ $widget['type'] ]['name'] = $widget['type'];
+								$group[ $widget['type'] ]['snippets'][] = $widget;
 							}
-							foreach ( $fields AS $key => $field) {
-								if ( is_numeric($key) OR empty($field['type']) ){
-									continue;
-								}
+							$block['api']['widgets'] = !empty($group)? $group : [];
+							$this->view->addBlock('main', $block, 'App::'. $app['name'] .'::wysiwyg');		
+								
+							$next_actions['Template::getSnippets'] = [];
+						}	
+					} elseif ( empty($_REQUEST['subapp']) ) { //normal app edit - wont need if subapp is specified
+						//let hooks change $response['blocks'], hook definition must also use references. Hook may change blocks directly or return to be added by runHook
+						$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ], false, 'add_blocks');
+						foreach ( ($response['blocks']??[]) as $section => $block) {
+							if ($section == 'main'){
+							  	//combine stored app config	with config from app at run time only - keep $app intact 
+							  	//combine stored app_hide with response app.hide, builder config is preferred 
+								$block['api']['app']['hide'] = ($app['app_hide']??[]) + ($block['api']['app']['hide']??[]); 
+								//Hide published button if does not have permission
+								if ( (!$this->user->has($this->requirements['PUBLISH']) OR !$is_supervisor) AND empty($app['app_enable']['versioning']) ){
+									$block['api']['app']['hide']['published'] = 1;
+								} 
+							  	//combine stored app_fields with response app.fields, before adding meta value	
+							  	$fields = ($app['app_fields']??[]) + ($block['api']['app']['fields']??[]);
+							  	unset($block['api']['app']['fields']); //block fields should be appended
 
-								$meta_key = $app['slug'] .'_'. $key;
-								//when manage permission is set, and employee doesnt have it, 
-								//allow (staff_)client_readonly/editable fields only like clientView (client_editable?)
-								if ( !empty($field['visibility']) AND ($field['visibility'] == 'staff_client_readonly' OR $field['visibility'] == 'readonly') ){
-									if ( (str_contains($field['is']??null, 'required')) OR 
-										!empty($field['value']) OR 
-										!empty($block['api']['page'][ $key ]) OR 
-										!empty($block['api']['page']['meta'][ $key ]) OR 
-										!empty($block['api']['page']['meta'][ $meta_key ]) 
-									){
-										$field['visibility'] = 'readonly';
-									} else {
-										//unset($block['api']['app']['fields'][ $key ]);
-										unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $meta_key ]);
-										continue;
-									}
-								} elseif ( !$is_supervisor ){
-									if ( empty($field['visibility']) ){ //treat it as client_editable
-										$field['visibility'] = 'client_editable';
-									}
-									//remove fields other than (staff_)client_editable/readonly
-									if ( str_contains($field['visibility'], 'client_readonly') AND (str_contains($field['is']??null, 'required') OR !empty($field['value']) ) ){ //show if readonly has value or is required/multiple-required, otherwise hide, should not change form_field.tpl as this applies to client only
-										$field['visibility'] = 'readonly';
-									} elseif ( $field['visibility'] != 'client_editable' ){
-										//unset($block['api']['app']['fields'][ $key ]);
-										unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $meta_key ]);
-										continue;
-									} elseif ( !empty($page['id']) AND $page['creator'] != $this->user->getId() ){ 
-										//not owner - adjust visibility for displaying purpose
-										//non-supervisor like client also like staff, maybe just let them edit client_editable
-										//$field['visibility'] = 'readonly';
-									}
+								//find parent source after $fields to remove related fields
+								if ( !empty($page['id']) ){
+									$block['api']['parent'] = $this->getParentPage($page, $fields);
 								}
-								//special case: lookup using other input, should NOT move inside formatFieldValue
-								if ( $field['type'] == 'select' AND (!empty($field['options']['From::input']) OR !empty($field['options']['From::lookup'])) ){
-									$lookup = array_values($field['options']);
-									$field['lookup'] = $lookup[1]??null;
-									if ( !empty($lookup[3]) ){
-										$field['listen'] = $lookup[3];
-										$lookup = $field['listen']; //shorten
-							    		//this value from another input should already gone thru formatFieldValue
-						    			$field['lookup-value'] = in_array($lookup, $this->changeable)? 
-    										($block['api']['page'][ $lookup ]??null) : 
-    										($fields[ $lookup ]['value']??null); 
-    									if (is_array($field['lookup-value'])){
-											$field['lookup-value'] = array_keys($field['lookup-value'])[0];
-										}	
-										if ( !empty($field['options']['Scope::SubRecords']) ){
-											$field['scope'] = 'SubRecords';
+								foreach ( $fields AS $key => $field) {
+									if ( is_numeric($key) OR empty($field['type']) ){
+										continue;
+									}
+
+									$meta_key = $app['slug'] .'_'. $key;
+									//when manage permission is set, and employee doesnt have it, 
+									//allow (staff_)client_readonly/editable fields only like clientView (client_editable?)
+									if ( !empty($field['visibility']) AND ($field['visibility'] == 'staff_client_readonly' OR $field['visibility'] == 'readonly') ){
+										if ( (str_contains($field['is']??null, 'required')) OR 
+											!empty($field['value']) OR 
+											!empty($block['api']['page'][ $key ]) OR 
+											!empty($block['api']['page']['meta'][ $key ]) OR 
+											!empty($block['api']['page']['meta'][ $meta_key ]) 
+										){
+											$field['visibility'] = 'readonly';
+										} else {
+											//unset($block['api']['app']['fields'][ $key ]);
+											unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $meta_key ]);
+											continue;
 										}
-						    		}	
-								}
-								//process value before option so option can see field['value']
-				    			if ( $key == 'creator' AND empty($page['id']) AND !empty($_GET['user']) ){ 
-				    				//create for user, editable so form will output a hidden field for user_id
-				    				($field['visibility']??null) == 'readonly' && $field['visibility'] = 'editable';
-				    				$this->formatFieldValue($_GET['user'], $key, $field, $app);
-				    			} elseif ( in_array($key, $this->changeable) OR array_key_exists($key, $block['api']['page']??[]) ){ //changeable plus read-only columns
-									if ( in_array($key, ['name', 'title', 'description', 'content']) ){
-					    				$this->formatFieldValue($block['api']['page'][ $key ][ $this->config['site']['language'] ]??$block['api']['page'][ $key ]??null, $key, $field, $app);
-				    				} else {
-					    				$this->formatFieldValue($block['api']['page'][ $key ]??null, $key, $field, $app);
-				    				}
-					    		} elseif (array_key_exists($key, $block['api']['page']['meta']??[]) OR array_key_exists($meta_key, $block['api']['page']['meta']??[]) OR !empty($field['value']) ) {
-				    				$this->formatFieldValue($block['api']['page']['meta'][ $key ]??$block['api']['page']['meta'][ $meta_key ]??null, $key, $field, $app);
-					    		} elseif ($field['type'] == 'fieldset') {//format scope in value
-					    			$this->formatFieldValue(null, $key, $field, $app);
-					   			} 						
-								//process options lookup, configs even if no value is set, $field passed by ref
-								$this->formatFieldOptions($key, $field, $app);
-		
-								$block['api']['app']['fields'][ $key ] = $fields[ $key ] = $field; //also set value to $fields
-								//unset($block['api']['page']['meta'][ $meta_key ]); //maybe leave it there for api
-							}
-							foreach ( $app['app_buttons']??[] AS $btn ){
-								if ( str_contains($btn['visibility'], 'staff') OR (
-										$btn['visibility'] == 'creator' AND (
-											empty($page['creator']) OR $page['creator'] == $this->user->getId()
-										)
-									)
-								){
-									$block['api']['app']['buttons'][] = $btn;
-								}
-							}
-							if ( !empty($app['app_tick']['params']) ){
-								$block['api']['app']['tick'] = $app['app_tick'];
-							}
-
-							if ( !empty($app['app_sub']) ){
-								$block['api']['app']['sub'] = $app['app_sub'];
-							}
-							if ( !empty($page['id']) AND !empty($app['app_enable']['versioning']) ){
-								$block['api']['versioning'] = $this->getVersions($page['id']);
-							}	
-
-						 	if ($this->view->html){				
-								//$links['update'] = $this->slug('App::update', []);
-								$links['main'] = $this->slug('App::main', ['app' => $app['slug'] ]);
-								$links['main'] .= !empty($this->config['system']['sgframe'])? '?sgframe=1' : '';
-								$links['subapp'] = $links['editor'];
-								$links['activities'] = $this->slug('Activity::main') .'?cors=1&html=1&for='. $app['name'] .'&fid='. ($page['id']??'');
-								$links['file_view'] = $this->slug('File::action', ['action' => 'view']);
-								//$links['file_api'] = $this->slug('File::action', ["action" => "manage"] );
-								$links['leave_collection'] = $this->slug('Collection::leave');
-								$links['leave_collection'] = $links['leave_collection'] .'?cors='. @$this->hashify($links['leave_collection'] .'::'. $_SESSION['token']);
-								$links['lookup'] = $this->slug('Lookup::now');
-								$links['lookup'] = $links['lookup'] .'?cors='. @$this->hashify($links['lookup'] .'::'. $_SESSION['token']);
-								if (!empty($block['api']['page']['slug']) AND str_contains($app['app_users'], 'guest') ){
-									$links['uri'] = $this->url($block['api']['page']['slug'], $block['api']['page']['type'], $block['api']['page']['subtype']);
-									if ( empty($page_info['published'])){
-						         		$links['uri'] .= '?oauth=sso';
-						         		$links['uri'] .= '&login=step1';
-						         		$links['uri'] .= '&preview=1';
-						         		$links['uri'] .= '&initiator='. $this->encode($this->config['system']['url'] . $this->config['system']['base_path']);		         			
-					         		}
-					         	}
-					         		
-								$block['links'] = $links;						
-								if (is_array($menus)) {
-									$block['html']['menus'] = $menus; 
-								}
-								if (empty($block['html']['title'])) {
-									$block['html']['title'] = $this->trans((is_numeric($id)? "Edit" : "New") ." :item", ['item' => $app['label'] ]);
-								}
-								if ( empty($page['meta']['upload_dir']) ){
-									$upload_dir = date("Y") .'Q'. ceil(date("n") / 3);
-								} else {
-									$upload_dir = $page['meta']['upload_dir'];
-								}
-								$block['html']['ajax'] = 1; //for loading Activities
-								$block['html']['publisher'] = ($this->user->has($this->requirements['PUBLISH']) OR $is_supervisor);	
-								$block['html']['upload_dir'] = 'elf_l1_'. rtrim(strtr(base64_encode($upload_dir), '+/=', '-_.'), '.');
-
-								if ( !empty($app['app_templates']['edit'])) {//override 
-									$block['template']['file'] = $app['app_templates']['edit'];
-								}
-								if ( !empty($block['template']['file']) ){ //can be in app folder or system template folder 
-									$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
-									//App may have a custom layout for editing, layout set in Builder is preferred
-									$layout = $app['app_layouts']['edit']??$block['template']['layout']??null; 
-									if ($layout AND is_file($this->path .'/../admin/'. $this->config['system']['template'] .'/layouts/'. $layout .'.tpl') 
-									){
-										$this->view->setLayout($layout); //only set if app uses custom template otherwise default layout
+									} elseif ( !$is_supervisor ){
+										if ( empty($field['visibility']) ){ //treat it as client_editable
+											$field['visibility'] = 'client_editable';
+										}
+										//remove fields other than (staff_)client_editable/readonly
+										if ( str_contains($field['visibility'], 'client_readonly') AND (str_contains($field['is']??null, 'required') OR !empty($field['value']) ) ){ //show if readonly has value or is required/multiple-required, otherwise hide, should not change form_field.tpl as this applies to client only
+											$field['visibility'] = 'readonly';
+										} elseif ( $field['visibility'] != 'client_editable' ){
+											//unset($block['api']['app']['fields'][ $key ]);
+											unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $meta_key ]);
+											continue;
+										} elseif ( !empty($page['id']) AND $page['creator'] != $this->user->getId() ){ 
+											//not owner - adjust visibility for displaying purpose
+											//non-supervisor like client also like staff, maybe just let them edit client_editable
+											//$field['visibility'] = 'readonly';
+										}
 									}
-								} else {
-									$block['template']['file'] = "app_edit";
+									//special case: lookup using other input, should NOT move inside formatFieldValue
+									if ( $field['type'] == 'select' AND (!empty($field['options']['From::input']) OR !empty($field['options']['From::lookup'])) ){
+										$lookup = array_values($field['options']);
+										$field['lookup'] = $lookup[1]??null;
+										if ( !empty($lookup[3]) ){
+											$field['listen'] = $lookup[3];
+											$lookup = $field['listen']; //shorten
+								    		//this value from another input should already gone thru formatFieldValue
+							    			$field['lookup-value'] = in_array($lookup, $this->changeable)? 
+	    										($block['api']['page'][ $lookup ]??null) : 
+	    										($fields[ $lookup ]['value']??null); 
+	    									if (is_array($field['lookup-value'])){
+												$field['lookup-value'] = array_keys($field['lookup-value'])[0];
+											}	
+											if ( !empty($field['options']['Scope::SubRecords']) ){
+												$field['scope'] = 'SubRecords';
+											}
+							    		}	
+									}
+									//process value before option so option can see field['value']
+					    			if ( $key == 'creator' AND empty($page['id']) AND !empty($_GET['user']) ){ 
+					    				//create for user, editable so form will output a hidden field for user_id
+					    				($field['visibility']??null) == 'readonly' && $field['visibility'] = 'editable';
+					    				$this->formatFieldValue($_GET['user'], $key, $field, $app);
+					    			} elseif ( in_array($key, $this->changeable) OR array_key_exists($key, $block['api']['page']??[]) ){ //changeable plus read-only columns
+										if ( in_array($key, ['name', 'title', 'description', 'content']) ){
+						    				$this->formatFieldValue($block['api']['page'][ $key ][ $this->config['site']['language'] ]??$block['api']['page'][ $key ]??null, $key, $field, $app);
+					    				} else {
+						    				$this->formatFieldValue($block['api']['page'][ $key ]??null, $key, $field, $app);
+					    				}
+						    		} elseif (array_key_exists($key, $block['api']['page']['meta']??[]) OR array_key_exists($meta_key, $block['api']['page']['meta']??[]) OR !empty($field['value']) ) {
+					    				$this->formatFieldValue($block['api']['page']['meta'][ $key ]??$block['api']['page']['meta'][ $meta_key ]??null, $key, $field, $app);
+						    		} elseif ($field['type'] == 'fieldset') {//format scope in value
+						    			$this->formatFieldValue(null, $key, $field, $app);
+						   			} 						
+									//process options lookup, configs even if no value is set, $field passed by ref
+									$this->formatFieldOptions($key, $field, $app);
+			
+									$block['api']['app']['fields'][ $key ] = $fields[ $key ] = $field; //also set value to $fields
+									//unset($block['api']['page']['meta'][ $meta_key ]); //maybe leave it there for api
 								}
-							}	
+								foreach ( $app['app_buttons']??[] AS $btn ){
+									if ( str_contains($btn['visibility'], 'staff') OR (
+											$btn['visibility'] == 'creator' AND (
+												empty($page['creator']) OR $page['creator'] == $this->user->getId()
+											)
+										)
+									){
+										$block['api']['app']['buttons'][] = $btn;
+									}
+								}
+								if ( !empty($app['app_tick']['params']) ){
+									$block['api']['app']['tick'] = $app['app_tick'];
+								}
+
+								if ( !empty($app['app_sub']) ){
+									$block['api']['app']['sub'] = $app['app_sub'];
+								}
+								if ( !empty($page['id']) AND !empty($app['app_enable']['versioning']) ){
+									$block['api']['versioning'] = $this->getVersions($page['id']);
+								}	
+
+							 	if ($this->view->html){				
+									//$links['update'] = $this->slug('App::update', []);
+									$links['main'] = $this->slug('App::main', ['app' => $app['slug'] ]);
+									$links['main'] .= !empty($this->config['system']['sgframe'])? '?sgframe=1' : '';
+									$links['subapp'] = $links['editor'];
+									$links['activities'] = $this->slug('Activity::main') .'?cors=1&html=1&for='. $app['name'] .'&fid='. ($page['id']??'');
+									$links['file_view'] = $this->slug('File::action', ['action' => 'view']);
+									//$links['file_api'] = $this->slug('File::action', ["action" => "manage"] );
+									$links['leave_collection'] = $this->slug('Collection::leave');
+									$links['leave_collection'] = $links['leave_collection'] .'?cors='. @$this->hashify($links['leave_collection'] .'::'. $_SESSION['token']);
+									$links['lookup'] = $this->slug('Lookup::now');
+									$links['lookup'] = $links['lookup'] .'?cors='. @$this->hashify($links['lookup'] .'::'. $_SESSION['token']);
+									if (!empty($block['api']['page']['slug']) AND str_contains($app['app_users'], 'guest') ){
+										$links['uri'] = $this->url($block['api']['page']['slug'], $block['api']['page']['type'], $block['api']['page']['subtype']);
+										if ( empty($page_info['published'])){
+							         		$links['uri'] .= '?oauth=sso';
+							         		$links['uri'] .= '&login=step1';
+							         		$links['uri'] .= '&preview=1';
+							         		$links['uri'] .= '&initiator='. $this->encode($this->config['system']['url'] . $this->config['system']['base_path']);		         			
+						         		}
+						         	}
+						         		
+									$block['links'] = $links;						
+									if (is_array($menus)) {
+										$block['html']['menus'] = $menus; 
+									}
+									if (empty($block['html']['title'])) {
+										$block['html']['title'] = $this->trans((is_numeric($id)? "Edit" : "New") ." :item", ['item' => $app['label'] ]);
+									}
+									if ( empty($page['meta']['upload_dir']) ){
+										$upload_dir = date("Y") .'Q'. ceil(date("n") / 3);
+									} else {
+										$upload_dir = $page['meta']['upload_dir'];
+									}
+									$block['html']['ajax'] = 1; //for loading Activities
+									$block['html']['publisher'] = ($this->user->has($this->requirements['PUBLISH']) OR $is_supervisor);	
+									$block['html']['upload_dir'] = 'elf_l1_'. rtrim(strtr(base64_encode($upload_dir), '+/=', '-_.'), '.');
+
+									if ( !empty($app['app_templates']['edit'])) {//override 
+										$block['template']['file'] = $app['app_templates']['edit'];
+									}
+									if ( !empty($block['template']['file']) ){ //can be in app folder or system template folder 
+										$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
+										//App may have a custom layout for editing, layout set in Builder is preferred
+										$layout = $app['app_layouts']['edit']??$block['template']['layout']??null; 
+										if ($layout AND is_file($this->path .'/../admin/'. $this->config['system']['template'] .'/layouts/'. $layout .'.tpl') 
+										){
+											$this->view->setLayout($layout); //only set if app uses custom template otherwise default layout
+										}
+									} else {
+										$block['template']['file'] = "app_edit";
+									}
+								}	
+							}
+							$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::edit');		
 						}
-						$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::edit');		
+
+						$next_actions['Layout::getLayouts'] = [ $this->config['site']['template'] ];
 					}
 
-					$next_actions['Layout::getLayouts'] = [ $this->config['site']['template'] ];
+					//subapp pages
+					if ( !empty($app['app_sub']) ){
+						$this->editSubApps($page??null, $app, $is_supervisor, $links['update']);
+					}
 				}
-
-				//subapp pages
-				if ( !empty($app['app_sub']) ){
-					$this->editSubApps($page??null, $app, $is_supervisor, $links['update']);
-				}
-
+					
 				if (!empty($next_actions)){
 					$this->router->registerQueue($next_actions);	
 				}
@@ -649,160 +659,161 @@ class App extends Page {
 		} elseif ( empty($_REQUEST['subapp']) ) { 
 			$response = $this->appProcess($app, 'clientView', $page);	
 
-			if ( empty($response['blocks']) ){
+			if ( empty($response['result']) || $response['result'] == 'error' ){
 				$status['result'] = 'error';
-				$status['message'][] = $this->trans('Invalid response from app');
-			}	
-			//let hooks change $response['blocks'], hook definition must also use references. Hook may change blocks directly or return to be added by runHook
-			$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ], false, 'add_blocks');
-			foreach ( ($response['blocks']??[]) AS $section => $block) {
-				if ($section == 'main'){
-				  //combine stored app config	with config from app at run time only - keep $app intact 
-				  //combine stored app_hide with response app.hide, builder config is preferred 
-					$block['api']['app']['hide'] = ($app['app_hide']??[]) + ($block['api']['app']['hide']??[]); 
-					//Hide published button if does not have permission
-					//if ( !$this->user->has($this->requirements['PUBLISH']) OR 
-					//	 ( !empty($app['app_permissions']['manage']) AND !$this->user->has($app['app_permissions']['manage']) ) ){
-					if ( empty($app['app_permissions']['client_write']) ){
-						$block['api']['app']['hide']['save'] = 1;
-						$block['api']['app']['hide']['published'] = 1;
-					}
-					if ( empty($app['app_enable']['versioning']) ){
-						$block['api']['app']['hide']['published'] = 1;
-					}	
+				$status['message'][] = $response['message']??$this->trans('Invalid response from app');
+			} else {	
+				//let hooks change $response['blocks'], hook definition must also use references. Hook may change blocks directly or return to be added by runHook
+				$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ], false, 'add_blocks');
+				foreach ( ($response['blocks']??[]) AS $section => $block) {
+					if ($section == 'main'){
+					  //combine stored app config	with config from app at run time only - keep $app intact 
+					  //combine stored app_hide with response app.hide, builder config is preferred 
+						$block['api']['app']['hide'] = ($app['app_hide']??[]) + ($block['api']['app']['hide']??[]); 
+						//Hide published button if does not have permission
+						//if ( !$this->user->has($this->requirements['PUBLISH']) OR 
+						//	 ( !empty($app['app_permissions']['manage']) AND !$this->user->has($app['app_permissions']['manage']) ) ){
+						if ( empty($app['app_permissions']['client_write']) ){
+							$block['api']['app']['hide']['save'] = 1;
+							$block['api']['app']['hide']['published'] = 1;
+						}
+						if ( empty($app['app_enable']['versioning']) ){
+							$block['api']['app']['hide']['published'] = 1;
+						}	
 
-					$block['api']['app']['hide']['tabsettings'] = 1; //client should not be able to change settings 
-					//} 
-					if ( !empty($page['id']) AND $page['creator'] != $this->user->getId() ){//hide tab setting if not the creator
-						$block['api']['app']['hide']['tabsettings'] = 1;
-					}
-				  	//combine stored app_fields with response app.fields, before adding meta value	
-				  	$fields = ($app['app_fields']??[]) + ($block['api']['app']['fields']??[]);
-				  	unset($block['api']['app']['fields']); //block fields should be appended
-					//find parent source after $fields to remove related fields
-					if ( !empty($page['id']) ){
-						$block['api']['parent'] = $this->getParentPage($page, $fields);
-					}
-					foreach ( $fields AS $key => $field) {
-						$meta_key = $app['slug'] .'_'. $key;
-						if ( empty($field['visibility']) ){ //treat it as client_editable
-							$field['visibility'] = 'client_editable';
+						$block['api']['app']['hide']['tabsettings'] = 1; //client should not be able to change settings 
+						//} 
+						if ( !empty($page['id']) AND $page['creator'] != $this->user->getId() ){//hide tab setting if not the creator
+							$block['api']['app']['hide']['tabsettings'] = 1;
 						}
-						//remove fields other than (staff_)client_readonly/editable
-						if ( str_contains($field['visibility'], 'client_readonly') AND (str_contains($field['is']??null, 'required') OR !empty($field['value']) OR !empty($block['api']['page'][ $key ]) OR !empty($block['api']['page']['meta'][ $key ]) OR !empty($block['api']['page']['meta'][ $meta_key ]) ) ){ //show if readonly has value or is required/multiple-required, otherwise hide, should not change form_field.tpl as this applies to client only
-							$field['visibility'] = 'readonly';
-						} elseif ( $field['visibility'] != 'client_editable' ){
-							//unset($block['api']['app']['fields'][ $key ]);
-							unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $meta_key ] );
-							continue;
-						} elseif ( !empty($page['id']) AND $page['creator'] != $this->user->getId() AND !str_contains($page['private'], $for_me .'w') ){ 
-							//not owner - adjust visibility for displaying purpose
-							$field['visibility'] = 'readonly';
+					  	//combine stored app_fields with response app.fields, before adding meta value	
+					  	$fields = ($app['app_fields']??[]) + ($block['api']['app']['fields']??[]);
+					  	unset($block['api']['app']['fields']); //block fields should be appended
+						//find parent source after $fields to remove related fields
+						if ( !empty($page['id']) ){
+							$block['api']['parent'] = $this->getParentPage($page, $fields);
 						}
-
-						//special case: lookup using other input, should NOT move inside formatFieldValue
-						if ( !empty($field['type']) AND $field['type'] == 'select' AND (!empty($field['options']['From::input']) OR !empty($field['options']['From::lookup'])) ){
-							$lookup = array_values($field['options']);
-							$field['lookup'] = $lookup[1]??null;
-							if ( !empty($lookup[3]) ){
-								$field['listen'] = $lookup[3];
-								$lookup = $field['listen']; //shorten
-					    		//this value from another input should already gone thru formatFieldValue
-				    			$field['lookup-value'] = in_array($lookup, $this->changeable)? 
-									($block['api']['page'][ $lookup ]??null) : 
-									($fields[ $lookup ]['value']??null); 
-								if (is_array($field['lookup-value'])){
-									$field['lookup-value'] = array_keys($field['lookup-value'])[0];
-								}
-								if (empty($field['lookup-value'])){ //client cannot lookup from frontend, unset to list all
-									unset($field['options']['From::input'], $field['options'][ $field['listen'] ]);
-								}
-								if ( !empty($field['options']['Scope::SubRecords']) ){
-									$field['scope'] = 'SubRecords';
-								}	
-				    		}	
-						}
-						//process value before option so option can see field['value']
-		    			if ( in_array($key, $this->changeable) OR array_key_exists($key, $block['api']['page']??[]) ){ //changeable plus read-only columns
-							if ( in_array($key, ['name', 'title', 'description', 'content']) ){
-					    		$this->formatFieldValue($block['api']['page'][ $key ][ $this->config['site']['language'] ]??$block['api']['page'][ $key ]??null, $key, $field, $app);
-					    	} else {
-					    		$this->formatFieldValue($block['api']['page'][ $key ]??null, $key, $field, $app);
-					    	}			    				
-			    		} elseif ( array_key_exists($key, $block['api']['page']['meta']??[]) OR array_key_exists($meta_key, $block['api']['page']['meta']??[]) OR !empty($field['value']) ){
-		    				$this->formatFieldValue($block['api']['page']['meta'][ $key ]??$block['api']['page']['meta'][ $meta_key ]??null, $key, $field, $app);
-			    		} elseif ( !empty($field['type']) AND $field['type'] == 'fieldset') { //format scope in value
-					    	$this->formatFieldValue(null, $key, $field, $app);
-					   	}			
-						//process options lookup, configs even if no value is set, $field passed by ref
-						$this->formatFieldOptions($key, $field, $app);
-	
-						$block['api']['app']['fields'][ $key ] = $fields[ $key ] = $field; //also set value to $fields
-						unset($block['api']['page']['meta'][ $key ], $block['api']['page']['meta'][ $meta_key ]);
-					}
-					foreach ( $app['app_buttons']??[] AS $btn ){
-						if ( str_contains($btn['visibility'], 'client') OR (
-								$btn['visibility'] == 'creator' AND (
-									empty($page['creator']) OR $page['creator'] == $this->user->getId()
-								)
-							) 
-						){
-							$block['api']['app']['buttons'][] = $btn;
-						}
-					}	
-					//subapp
-					if ( !empty($app['app_sub']) ){
-						$block['api']['app']['sub'] = $app['app_sub'];
-					}
-					if ( !empty($page['id']) AND !empty($app['app_enable']['versioning']) ){
-						$block['api']['versioning'] = $this->getVersions($page['id']);
-					}
-
-				 	if ($this->view->html){				
-						//$links['update'] = $this->slug('App::update', []);
-						$links['main'] = $this->slug('App::clientMain', ['app' => $app['slug'] ]);
-						$links['main'] .= !empty($this->config['system']['sgframe'])? '?sgframe=1' : '';
-						$links['file_view'] = $this->slug('File::clientView');
-						$links['subapp'] = $this->config['system']['edit_url'] . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-						if (!empty($block['api']['page']['slug']) AND str_contains($app['app_users'], 'guest') ){
-							$links['uri'] = $this->url($block['api']['page']['slug'], $block['api']['page']['type'], $block['api']['page']['subtype']);
-							if ( empty($page_info['published'])){
-				         		$links['uri'] .= '?oauth=sso';
-				         		$links['uri'] .= '&login=step1';
-				         		$links['uri'] .= '&preview=1';
-				         		$links['uri'] .= '&initiator='. $this->encode($this->config['system']['url'] . $this->config['system']['base_path']);		         			
-			         		}
-			         	}
-
-						$block['links'] = $links;						
-						if ( !empty($_COOKIE) AND $this->getAppConfigValues('App\\'. $app['name'], null, '_captcha') ) {
-							$block['html']['challenge_captcha'] = $this->createCaptcha(substr($this->config['salt'], 5, 15)); 
-						}
-						if (is_array($menus)) {
-							$block['html']['menus'] = $menus; 
-						}
-						if (empty($block['html']['title'])) {
-							$block['html']['title'] = $this->trans((is_numeric($id)? "View" : "New") ." :item", ['item' => $app['label'] ]);
-						}
-
-						if ( !empty($app['app_templates']['edit'])) {//override 
-							$block['template']['file'] = $app['app_templates']['edit'];
-						}
-						if ( !empty($block['template']['file']) ){ //can be in app folder or system template folder 
-							$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
-							//App may have a custom layout for editing, layout set in Builder is preferred
-							$layout = $app['app_layouts']['edit']??$block['template']['layout']??null; 
-							if ($layout AND is_file($this->path .'/../admin/'. $this->config['system']['template'] .'/layouts/'. $layout .'.tpl') 
-							){
-								$this->view->setLayout($layout); //only set if app uses custom template otherwise default layout
+						foreach ( $fields AS $key => $field) {
+							$meta_key = $app['slug'] .'_'. $key;
+							if ( empty($field['visibility']) ){ //treat it as client_editable
+								$field['visibility'] = 'client_editable';
 							}
-						} else {
-							$block['template']['file'] = "app_edit";
+							//remove fields other than (staff_)client_readonly/editable
+							if ( str_contains($field['visibility'], 'client_readonly') AND (str_contains($field['is']??null, 'required') OR !empty($field['value']) OR !empty($block['api']['page'][ $key ]) OR !empty($block['api']['page']['meta'][ $key ]) OR !empty($block['api']['page']['meta'][ $meta_key ]) ) ){ //show if readonly has value or is required/multiple-required, otherwise hide, should not change form_field.tpl as this applies to client only
+								$field['visibility'] = 'readonly';
+							} elseif ( $field['visibility'] != 'client_editable' ){
+								//unset($block['api']['app']['fields'][ $key ]);
+								unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $meta_key ] );
+								continue;
+							} elseif ( !empty($page['id']) AND $page['creator'] != $this->user->getId() AND !str_contains($page['private'], $for_me .'w') ){ 
+								//not owner - adjust visibility for displaying purpose
+								$field['visibility'] = 'readonly';
+							}
+
+							//special case: lookup using other input, should NOT move inside formatFieldValue
+							if ( !empty($field['type']) AND $field['type'] == 'select' AND (!empty($field['options']['From::input']) OR !empty($field['options']['From::lookup'])) ){
+								$lookup = array_values($field['options']);
+								$field['lookup'] = $lookup[1]??null;
+								if ( !empty($lookup[3]) ){
+									$field['listen'] = $lookup[3];
+									$lookup = $field['listen']; //shorten
+						    		//this value from another input should already gone thru formatFieldValue
+					    			$field['lookup-value'] = in_array($lookup, $this->changeable)? 
+										($block['api']['page'][ $lookup ]??null) : 
+										($fields[ $lookup ]['value']??null); 
+									if (is_array($field['lookup-value'])){
+										$field['lookup-value'] = array_keys($field['lookup-value'])[0];
+									}
+									if (empty($field['lookup-value'])){ //client cannot lookup from frontend, unset to list all
+										unset($field['options']['From::input'], $field['options'][ $field['listen'] ]);
+									}
+									if ( !empty($field['options']['Scope::SubRecords']) ){
+										$field['scope'] = 'SubRecords';
+									}	
+					    		}	
+							}
+							//process value before option so option can see field['value']
+			    			if ( in_array($key, $this->changeable) OR array_key_exists($key, $block['api']['page']??[]) ){ //changeable plus read-only columns
+								if ( in_array($key, ['name', 'title', 'description', 'content']) ){
+						    		$this->formatFieldValue($block['api']['page'][ $key ][ $this->config['site']['language'] ]??$block['api']['page'][ $key ]??null, $key, $field, $app);
+						    	} else {
+						    		$this->formatFieldValue($block['api']['page'][ $key ]??null, $key, $field, $app);
+						    	}			    				
+				    		} elseif ( array_key_exists($key, $block['api']['page']['meta']??[]) OR array_key_exists($meta_key, $block['api']['page']['meta']??[]) OR !empty($field['value']) ){
+			    				$this->formatFieldValue($block['api']['page']['meta'][ $key ]??$block['api']['page']['meta'][ $meta_key ]??null, $key, $field, $app);
+				    		} elseif ( !empty($field['type']) AND $field['type'] == 'fieldset') { //format scope in value
+						    	$this->formatFieldValue(null, $key, $field, $app);
+						   	}			
+							//process options lookup, configs even if no value is set, $field passed by ref
+							$this->formatFieldOptions($key, $field, $app);
+		
+							$block['api']['app']['fields'][ $key ] = $fields[ $key ] = $field; //also set value to $fields
+							unset($block['api']['page']['meta'][ $key ], $block['api']['page']['meta'][ $meta_key ]);
 						}
-					}	
+						foreach ( $app['app_buttons']??[] AS $btn ){
+							if ( str_contains($btn['visibility'], 'client') OR (
+									$btn['visibility'] == 'creator' AND (
+										empty($page['creator']) OR $page['creator'] == $this->user->getId()
+									)
+								) 
+							){
+								$block['api']['app']['buttons'][] = $btn;
+							}
+						}	
+						//subapp
+						if ( !empty($app['app_sub']) ){
+							$block['api']['app']['sub'] = $app['app_sub'];
+						}
+						if ( !empty($page['id']) AND !empty($app['app_enable']['versioning']) ){
+							$block['api']['versioning'] = $this->getVersions($page['id']);
+						}
+
+					 	if ($this->view->html){				
+							//$links['update'] = $this->slug('App::update', []);
+							$links['main'] = $this->slug('App::clientMain', ['app' => $app['slug'] ]);
+							$links['main'] .= !empty($this->config['system']['sgframe'])? '?sgframe=1' : '';
+							$links['file_view'] = $this->slug('File::clientView');
+							$links['subapp'] = $this->config['system']['edit_url'] . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+							if (!empty($block['api']['page']['slug']) AND str_contains($app['app_users'], 'guest') ){
+								$links['uri'] = $this->url($block['api']['page']['slug'], $block['api']['page']['type'], $block['api']['page']['subtype']);
+								if ( empty($page_info['published'])){
+					         		$links['uri'] .= '?oauth=sso';
+					         		$links['uri'] .= '&login=step1';
+					         		$links['uri'] .= '&preview=1';
+					         		$links['uri'] .= '&initiator='. $this->encode($this->config['system']['url'] . $this->config['system']['base_path']);		         			
+				         		}
+				         	}
+
+							$block['links'] = $links;						
+							if ( !empty($_COOKIE) AND $this->getAppConfigValues('App\\'. $app['name'], null, '_captcha') ) {
+								$block['html']['challenge_captcha'] = $this->createCaptcha(substr($this->config['salt'], 5, 15)); 
+							}
+							if (is_array($menus)) {
+								$block['html']['menus'] = $menus; 
+							}
+							if (empty($block['html']['title'])) {
+								$block['html']['title'] = $this->trans((is_numeric($id)? "View" : "New") ." :item", ['item' => $app['label'] ]);
+							}
+
+							if ( !empty($app['app_templates']['edit'])) {//override 
+								$block['template']['file'] = $app['app_templates']['edit'];
+							}
+							if ( !empty($block['template']['file']) ){ //can be in app folder or system template folder 
+								$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
+								//App may have a custom layout for editing, layout set in Builder is preferred
+								$layout = $app['app_layouts']['edit']??$block['template']['layout']??null; 
+								if ($layout AND is_file($this->path .'/../admin/'. $this->config['system']['template'] .'/layouts/'. $layout .'.tpl') 
+								){
+									$this->view->setLayout($layout); //only set if app uses custom template otherwise default layout
+								}
+							} else {
+								$block['template']['file'] = "app_edit";
+							}
+						}	
+					}
+					$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::clientView');		
 				}
-				$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::clientView');		
-			}
+			}	
 		}		
 
 		//subapp pages
@@ -948,13 +959,13 @@ class App extends Page {
 					}	
 					unset($page['fields'][ $key ]);
 				} elseif ( empty($page_info['id']) AND 
-					!empty($page['parent__id']) AND 
-					!empty($page['parent__type']) AND 
-					!empty($page['parent__subtype']) AND 
-					$key == strtolower($page['parent__type'] == 'App'? $page['parent__subtype'] : $page['parent__type']) 
+					!empty($page['_parent']['id']) AND 
+					!empty($page['_parent']['type']) AND 
+					!empty($page['_parent']['subtype']) AND 
+					$key == strtolower($page['_parent']['type'] == 'App'? $page['_parent']['subtype'] : $page['_parent']['type']) 
 				){ //meta field for linking back to parent app, set parent id when creating only
-					//$page['meta'][$app['slug'] .'_'. $key] = $page['parent__id'];
-					$page['meta'][ $key ] = $page['parent__id'];
+					//$page['meta'][$app['slug'] .'_'. $key] = $page['_parent']['id'];
+					$page['meta'][ $key ] = $page['_parent']['id'];
 				}
 			}
 			//button keys which  are not included in app_fields, should be processed after app_fields as it filters out hidden/readonly $key, eligible keys in app_fields already added
@@ -986,47 +997,52 @@ class App extends Page {
 			if ( empty($page['page_linking_only']) ){
 				//replace $page by whatever app returns to us
 				$response = $this->appProcess($app, 'update', $page); 
-				$page = $response['page'];
-				//enforce data type/subtype
-				$page['type'] = 'App';
-				$page['subtype'] = $app['name'];
-				//let hooks change $page, hook definition must also use references. 
-				$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$page, $page_info??[] ]);
+				if ( !empty($response['result']) AND $response['result'] == 'success'){
+					$page = $response['page'];
+					//enforce data type/subtype
+					$page['type'] = 'App';
+					$page['subtype'] = $app['name'];
+					//let hooks change $page, hook definition must also use references. 
+					$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$page, $page_info??[] ]);
 
-				//as app may return different page id, we can only rely on page_info[id] for any operation
-				if (empty($page_info['id'])) {
-					if ($data = $this->create($page)) { // create a new page	
-						$page_info['id'] = $data['id']; //we set value for the referenced id set in runAutomation first 
-						$page_info = $data; //now $page_info can be overridden without affecting the reference 
-						$status['message'][] = $this->trans(':item added successfully', ['item' => $app['label'] ]);
+					//as app may return different page id, we can only rely on page_info[id] for any operation
+					if (empty($page_info['id'])) {
+						if ($data = $this->create($page)) { // create a new page	
+							$page_info['id'] = $data['id']; //we set value for the referenced id set in runAutomation first 
+							$page_info = $data; //now $page_info can be overridden without affecting the reference 
+							$status['message'][] = $this->trans(':item added successfully', ['item' => $app['label'] ]);
+						} else {
+							$status['result'] = 'error';
+							$status['message'][] = $this->trans(':item was not added', ['item' => $app['label'] ]);
+						}		
 					} else {
-						$status['result'] = 'error';
-						$status['message'][] = $this->trans(':item was not added', ['item' => $app['label'] ]);
-					}		
+						$data = $this->prepareData($page);
+						//if ( !empty($page['quick']) ){
+						//	unset($data['published']); //quick update wont change published status (support for kanban dragging )
+						//}
+						if ($this->db
+							->table($this->table)
+							->where('id', $page_info['id'])
+							->where('subtype', $page['subtype'])//trust the subtype returned by our appProcess logic
+							->update( $data )
+						){
+							$status['message'][] = $this->trans(':item updated successfully', ['item' => $app['label'] ]);	
+						} else {
+							$status['result'] = 'error';
+							$status['message'][] = $this->trans(':item was not updated', ['item' => $app['label'] ]);
+						}	
+					}
+					//debug loop? echo $this->loop .': '. $app['name']; print_r($page);
+					if ( empty($status['result']) AND !empty($page["published"]) AND empty($data['published']) ){
+						$status['message'][] = $this->trans("You don't have permissions to :action", ['action' => 'publish']);
+					}
 				} else {
-					$data = $this->prepareData($page);
-					//if ( !empty($page['quick']) ){
-					//	unset($data['published']); //quick update wont change published status (support for kanban dragging )
-					//}
-					if ($this->db
-						->table($this->table)
-						->where('id', $page_info['id'])
-						->where('subtype', $page['subtype'])//trust the subtype returned by our appProcess logic
-						->update( $data )
-					){
-						$status['message'][] = $this->trans(':item updated successfully', ['item' => $app['label'] ]);	
-					} else {
-						$status['result'] = 'error';
-						$status['message'][] = $this->trans(':item was not updated', ['item' => $app['label'] ]);
-					}	
-				}
-				//debug loop? echo $this->loop .': '. $app['name']; print_r($page);
-				if ( empty($status['result']) AND !empty($page["published"]) AND empty($data['published']) ){
-					$status['message'][] = $this->trans("You don't have permissions to :action", ['action' => 'publish']);
-				}
+					$status['result'] = $response['result']??'error';
+					$status['message'][] = $response['message']??$this->trans('Invalid response from app');
+				}	
 			}
 
-			if ( !empty($page_info['id']) ){
+			if ( !empty($page_info['id']) AND (empty($status['result']) || $status['result'] != 'error') ){
 				//Page linking
 				if ( !empty($app['app_sub']) ){
 					if ( !empty($page['sub']) ){
@@ -1144,6 +1160,9 @@ class App extends Page {
 				}	
 				if ( !empty($data['published']) ){	
 					$block['api']['page']['published'] = $data['published'];
+				}						
+				if ( !empty($data['status']) ){	
+					$block['api']['page']['status'] = $data['status'];
 				}						
 				$this->view->addBlock('main', $block, $this->class .'::update');
 			}
@@ -1317,9 +1336,9 @@ class App extends Page {
 						$changes[ $key ] = [];
 					}	
 					unset($page['fields'][ $key ]);
-				} elseif ( empty($page_info['id']) AND !empty($page['parent__id']) AND !empty($page['parent__type']) AND !empty($page['parent__subtype']) AND $key == strtolower($page['parent__type'] == 'App'? $page['parent__subtype'] : $page['parent__type']) ){ //meta field for linking back to parent app, set parent id when creating
-					//$page['meta'][$app['slug'] .'_'. $key] = $page['parent__id'];
-					$page['meta'][ $key ] = $page['parent__id'];
+				} elseif ( empty($page_info['id']) AND !empty($page['_parent']['id']) AND !empty($page['_parent']['type']) AND !empty($page['_parent']['subtype']) AND $key == strtolower($page['_parent']['type'] == 'App'? $page['_parent']['subtype'] : $page['_parent']['type']) ){ //meta field for linking back to parent app, set parent id when creating
+					//$page['meta'][$app['slug'] .'_'. $key] = $page['_parent']['id'];
+					$page['meta'][ $key ] = $page['_parent']['id'];
 				}
 			}
 			//button keys which  are not included in app_fields, should be processed after app_fields as it filters out hidden/readonly $key, eligible keys in app_fields already added
@@ -1351,40 +1370,45 @@ class App extends Page {
 			if ( empty($page['page_linking_only']) ){
 				//replace $page by whatever app returns to us
 				$response = $this->appProcess($app, 'update', $page); //should be clientUpdate
-				$page = $response['page'];
-				//enforce data type/subtype
-				$page['type'] = 'App';
-				$page['subtype'] = $app['name'];
+				if ( !empty($response['result']) AND $response['result'] == 'success'){
+					$page = $response['page'];
+					//enforce data type/subtype
+					$page['type'] = 'App';
+					$page['subtype'] = $app['name'];
 
-				//let hooks change $page, hook definition must also use references i.e &$page
-				$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$page, $page_info??[] ]);
+					//let hooks change $page, hook definition must also use references i.e &$page
+					$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$page, $page_info??[] ]);
 
-				//as app may return different page id, we can only rely on page_info[id] for any operation
-				if (empty($page_info['id'])) {
-					if ($data = $this->create($page)) { // create a new page	
-						$page_info['id'] = $data['id']; //we set value for the referenced id set in runAutomation first 
-						$page_info = $data;
-						$status['message'][] = $this->trans(':item added successfully', ['item' => $app['label'] ]);						
+					//as app may return different page id, we can only rely on page_info[id] for any operation
+					if (empty($page_info['id'])) {
+						if ($data = $this->create($page)) { // create a new page	
+							$page_info['id'] = $data['id']; //we set value for the referenced id set in runAutomation first 
+							$page_info = $data;
+							$status['message'][] = $this->trans(':item added successfully', ['item' => $app['label'] ]);						
+						} else {
+							$status['result'] = 'error';
+							$status['message'][] = $this->trans(':item was not added', ['item' => $app['label'] ]);					
+						}		
 					} else {
-						$status['result'] = 'error';
-						$status['message'][] = $this->trans(':item was not added', ['item' => $app['label'] ]);					
-					}		
+						if ($this->db
+							->table($this->table)
+							->where('id', $page_info['id'])
+							->where('subtype', $page['subtype'])//trust the subtype returned by our appProcess logic
+							->update( $this->prepareData($page) )
+						){
+							$status['message'][] = $this->trans(':item updated successfully', ['item' => $app['label'] ]);		
+						} else {
+							$status['result'] = 'error';
+							$status['message'][] = $this->trans(':item was not updated', ['item' => $app['label'] ]);										
+						}	
+					}
 				} else {
-					if ($this->db
-						->table($this->table)
-						->where('id', $page_info['id'])
-						->where('subtype', $page['subtype'])//trust the subtype returned by our appProcess logic
-						->update( $this->prepareData($page) )
-					){
-						$status['message'][] = $this->trans(':item updated successfully', ['item' => $app['label'] ]);		
-					} else {
-						$status['result'] = 'error';
-						$status['message'][] = $this->trans(':item was not updated', ['item' => $app['label'] ]);										
-					}	
-				}
+					$status['result'] = $response['result']??'error';
+					$status['message'][] = $response['message']??$this->trans('Invalid response from app');
+				}	
 			}
 
-			if (!empty($page_info['id'])) {
+			if ( !empty($page_info['id']) AND (empty($status['result']) || $status['result'] != 'error') ){
 				//do page linking (and create subpage if needed) - unlink is not needed for clientView			
 				if ( !empty($app['app_sub']) AND !empty($page['sub'] = $this->array_remove_by_values($page['sub']??[])) ){
 					empty($status) && $status = []; 
@@ -1861,129 +1885,134 @@ class App extends Page {
 			//normal app render
 			if ( empty($_REQUEST['subapp']) ){
 				$response = $this->appProcess($app, 'render', $page);
-				$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ]);
-				foreach ( ($response['blocks']??[]) AS $section => $block) {
-					if ($section == 'main'){
-						//combine stored app_fields with response app.fields, before adding meta value	
-						$fields = ($app['app_fields']??[]) + ($block['api']['app']['fields']??[]);
-					  	unset($block['api']['app']['fields']); //block fields should be appended
-						//get public profile
-						if ( !empty($block['api']['page']['creator']) ){
-				    		$block['api']['profile'] = $this->getProfile($block['api']['page']['creator']);
-							$block['api']['parent'] = $this->getParentPage($page, $fields);
-				    	}	
-						//remove non client_ fields
-						foreach ( $fields AS $key => $field) {
-							if ( empty($field['visibility']) ){
-								//treat it as client_editable
-							} elseif ( !str_contains($field['visibility'], 'client_') OR $field['visibility'] == 'client_hidden' ){
-								unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $app['slug'] .'_'. $key]);
-								continue;
-							} 
-							$meta_key = $app['slug'] .'_'. $key;
-							//special case: lookup using other input, should NOT move inside formatFieldValue
-							if ( $field['type'] == 'select' AND (!empty($field['options']['From::input']) OR !empty($field['options']['From::lookup'])) ){
-								$lookup = array_values($field['options']);
-								$field['lookup'] = $lookup[1]??null;
-								if ( !empty($lookup[3]) ){
-									$field['listen'] = $lookup[3];
-									$lookup = $field['listen']; //shorten
-						    		//this value from another input should already gone thru formatFieldValue
-					    			$field['lookup-value'] = in_array($lookup, $this->changeable)? 
-										($block['api']['page'][ $lookup ]??null) : 
-										($block['api']['app']['fields'][ $lookup ]['value']??null); 
-									if (is_array($field['lookup-value'])){
-										$field['lookup-value'] = array_keys($field['lookup-value'])[0];
-									}
-									if ( !empty($field['options']['Scope::SubRecords']) ){
-										$field['scope'] = 'SubRecords';
-									}	
-					    		}	
+				if ( empty($response['result']) || $response['result'] == 'error' ){
+					$status['result'] = 'error';
+					$status['message'][] = $response['message']??$this->trans('Invalid response from app');
+				} else {
+					$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ]);
+					foreach ( ($response['blocks']??[]) AS $section => $block) {
+						if ($section == 'main'){
+							//combine stored app_fields with response app.fields, before adding meta value	
+							$fields = ($app['app_fields']??[]) + ($block['api']['app']['fields']??[]);
+						  	unset($block['api']['app']['fields']); //block fields should be appended
+							//get public profile
+							if ( !empty($block['api']['page']['creator']) ){
+					    		$block['api']['profile'] = $this->getProfile($block['api']['page']['creator']);
+								$block['api']['parent'] = $this->getParentPage($page, $fields);
+					    	}	
+							//remove non client_ fields
+							foreach ( $fields AS $key => $field) {
+								if ( empty($field['visibility']) ){
+									//treat it as client_editable
+								} elseif ( !str_contains($field['visibility'], 'client_') OR $field['visibility'] == 'client_hidden' ){
+									unset($block['api']['page']['meta'][ $key ], $block['api']['app']['fields'][ $key ], $block['api']['page']['meta'][ $app['slug'] .'_'. $key]);
+									continue;
+								} 
+								$meta_key = $app['slug'] .'_'. $key;
+								//special case: lookup using other input, should NOT move inside formatFieldValue
+								if ( $field['type'] == 'select' AND (!empty($field['options']['From::input']) OR !empty($field['options']['From::lookup'])) ){
+									$lookup = array_values($field['options']);
+									$field['lookup'] = $lookup[1]??null;
+									if ( !empty($lookup[3]) ){
+										$field['listen'] = $lookup[3];
+										$lookup = $field['listen']; //shorten
+							    		//this value from another input should already gone thru formatFieldValue
+						    			$field['lookup-value'] = in_array($lookup, $this->changeable)? 
+											($block['api']['page'][ $lookup ]??null) : 
+											($block['api']['app']['fields'][ $lookup ]['value']??null); 
+										if (is_array($field['lookup-value'])){
+											$field['lookup-value'] = array_keys($field['lookup-value'])[0];
+										}
+										if ( !empty($field['options']['Scope::SubRecords']) ){
+											$field['scope'] = 'SubRecords';
+										}	
+						    		}	
+								}
+								//process value before option so option can see field['value']
+				    			if ( in_array($key, $this->changeable) OR 
+				    				array_key_exists($key, $block['api']['page']??[]) 
+				    			){ //changeable plus read-only columns
+									if ( in_array($key, ['name', 'title', 'description', 'content']) ){
+							    		$this->formatFieldValue($block['api']['page'][ $key ][ $this->config['site']['language'] ]??$block['api']['page'][ $key ]??null, $key, $field, $app, 'for_guest');
+							    	} else {
+							    		$this->formatFieldValue($block['api']['page'][ $key ]??null, $key, $field, $app, 'for_guest');
+							    	}
+							    	if ( !empty($field['_value']) ){ //returned info
+				    					$block['api']['page'][ $key ] = $field['_value'];
+				    				}			    				
+					    		} elseif ( array_key_exists($key, $block['api']['page']['meta']??[]) OR 
+					    			array_key_exists($meta_key, $block['api']['page']['meta']??[]) OR 
+					    			!empty($field['value']) 
+					    		){
+				    				$this->formatFieldValue($block['api']['page']['meta'][ $key ]??$block['api']['page']['meta'][ $meta_key ]??null, $key, $field, $app, 'for_guest');
+				    				if ( !empty($field['_value']) ){
+				    					$block['api']['page']['meta'][ $key ] = $block['api']['page']['meta'][ $meta_key ] = $field['_value'];
+				    				} 
+					    		} elseif ( !empty($field['type']) AND $field['type'] == 'fieldset') { //format scope in value
+							    	$this->formatFieldValue(null, $key, $field, $app, 'for_guest');
+							   	} else {
+					    			continue;
+					    		}
+					    		//guest do not have edit mode so no need to format options
+								//$this->formatFieldOptions($key, $field, $app);
+								unset($field['options'], $field['_value']);
+								$block['api']['app']['fields'][ $key ] = $field;		
 							}
-							//process value before option so option can see field['value']
-			    			if ( in_array($key, $this->changeable) OR 
-			    				array_key_exists($key, $block['api']['page']??[]) 
-			    			){ //changeable plus read-only columns
-								if ( in_array($key, ['name', 'title', 'description', 'content']) ){
-						    		$this->formatFieldValue($block['api']['page'][ $key ][ $this->config['site']['language'] ]??$block['api']['page'][ $key ]??null, $key, $field, $app, 'for_guest');
-						    	} else {
-						    		$this->formatFieldValue($block['api']['page'][ $key ]??null, $key, $field, $app, 'for_guest');
-						    	}
-						    	if ( !empty($field['_value']) ){ //returned info
-			    					$block['api']['page'][ $key ] = $field['_value'];
-			    				}			    				
-				    		} elseif ( array_key_exists($key, $block['api']['page']['meta']??[]) OR 
-				    			array_key_exists($meta_key, $block['api']['page']['meta']??[]) OR 
-				    			!empty($field['value']) 
-				    		){
-			    				$this->formatFieldValue($block['api']['page']['meta'][ $key ]??$block['api']['page']['meta'][ $meta_key ]??null, $key, $field, $app, 'for_guest');
-			    				if ( !empty($field['_value']) ){
-			    					$block['api']['page']['meta'][ $key ] = $block['api']['page']['meta'][ $meta_key ] = $field['_value'];
-			    				} 
-				    		} elseif ( !empty($field['type']) AND $field['type'] == 'fieldset') { //format scope in value
-						    	$this->formatFieldValue(null, $key, $field, $app, 'for_guest');
-						   	} else {
-				    			continue;
-				    		}
-				    		//guest do not have edit mode so no need to format options
-							//$this->formatFieldOptions($key, $field, $app);
-							unset($field['options'], $field['_value']);
-							$block['api']['app']['fields'][ $key ] = $field;		
-						}
-						//get user name if not yet processed
-						if ( !is_array($block['api']['page']['creator']) ){
-							$creator = $this->lookupById('user', $block['api']['page']['creator'])??$this->lookupById('staff', $block['api']['page']['creator']); 
-							$block['api']['page']['creator_name'] = $creator['rows'][ $block['api']['page']['creator'] ]??'';
-							$block['api']['page']['creator_avatar'] = $creator['images'][ $block['api']['page']['creator'] ]??null;
-							$block['api']['page']['creator_label'] = $this->trans($app['app_columns']['creator']??'Author');
-						}
-						foreach ( $app['app_buttons']??[] AS $btn ){
-							if ( str_contains($btn['visibility'], 'client') OR (
-									$btn['visibility'] == 'creator' AND (
-										empty($page['creator']) OR $page['creator'] == $this->user->getId()
+							//get user name if not yet processed
+							if ( !is_array($block['api']['page']['creator']) ){
+								$creator = $this->lookupById('user', $block['api']['page']['creator'])??$this->lookupById('staff', $block['api']['page']['creator']); 
+								$block['api']['page']['creator_name'] = $creator['rows'][ $block['api']['page']['creator'] ]??'';
+								$block['api']['page']['creator_avatar'] = $creator['images'][ $block['api']['page']['creator'] ]??null;
+								$block['api']['page']['creator_label'] = $this->trans($app['app_columns']['creator']??'Author');
+							}
+							foreach ( $app['app_buttons']??[] AS $btn ){
+								if ( str_contains($btn['visibility'], 'client') OR (
+										$btn['visibility'] == 'creator' AND (
+											empty($page['creator']) OR $page['creator'] == $this->user->getId()
+										)
 									)
-								)
-							){
-								$block['api']['app']['buttons'][] = $btn;
+								){
+									$block['api']['app']['buttons'][] = $btn;
+								}
 							}
-						}
-						//subapp
-						if ( !empty($app['app_sub']) ){
-							$block['api']['app']['sub'] = $app['app_sub'];
+							//subapp
+							if ( !empty($app['app_sub']) ){
+								$block['api']['app']['sub'] = $app['app_sub'];
+							}
+
+							if($this->view->html){				
+								$block['html']['current_app'] = $app['name'];
+								$block['html']['app_label'] = $this->trans($app['label']);
+								$block['html']['app_label_plural'] = $this->trans($this->pluralize($app['label']));
+								if ( !empty($app['app_sub']) AND !$this->user->getId() AND !empty($page['id']) ){
+									$block['html']['sso_requester'] = $this->encode('https://'. $this->config['site']['url'] . $page['slug']);
+								}
+								if ( !empty($app['app_templates']['page']) ) {
+									$block['template']['file'] = $app['app_templates']['page'];//"page";
+								} elseif ( !empty($app['app_templates']['page_string']) ) { //not really neccessary
+									$block['template']['string'] = base64_encode($app['app_templates']['page_string']);
+								} 
+								if ( !empty($block['template']['file']) AND is_file($this->path . $app['slug'] . ($app['id']??'') .'/'. $block['template']['file'] .'.tpl') 
+								){
+									$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
+								} elseif ( empty($block['template']['file']) ){
+									$block['template']['file'] = "app_page";
+								}
+								if ( !empty($_COOKIE) AND $this->getAppConfigValues('App\\'. $app['name'], null, '_captcha') ) {
+									$block['html']['challenge_captcha'] = $this->createCaptcha(substr($this->config['salt'], 5, 15)); 
+								}
+								//App may have a default layout, then each page may have its own layout
+								if ($layout = $page['layout']??$app['app_layouts']['page']??$block['template']['layout']??null) {//=1 but set $layout
+									$this->view->setLayout($layout); //unlike edit, layout could be stored in app folder
+								}							
+							}
 						}
 
-						if($this->view->html){				
-							$block['html']['current_app'] = $app['name'];
-							$block['html']['app_label'] = $this->trans($app['label']);
-							$block['html']['app_label_plural'] = $this->trans($this->pluralize($app['label']));
-							if ( !empty($app['app_sub']) AND !$this->user->getId() AND !empty($page['id']) ){
-								$block['html']['sso_requester'] = $this->encode('https://'. $this->config['site']['url'] . $page['slug']);
-							}
-							if ( !empty($app['app_templates']['page']) ) {
-								$block['template']['file'] = $app['app_templates']['page'];//"page";
-							} elseif ( !empty($app['app_templates']['page_string']) ) { //not really neccessary
-								$block['template']['string'] = base64_encode($app['app_templates']['page_string']);
-							} 
-							if ( !empty($block['template']['file']) AND is_file($this->path . $app['slug'] . ($app['id']??'') .'/'. $block['template']['file'] .'.tpl') 
-							){
-								$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
-							} elseif ( empty($block['template']['file']) ){
-								$block['template']['file'] = "app_page";
-							}
-							if ( !empty($_COOKIE) AND $this->getAppConfigValues('App\\'. $app['name'], null, '_captcha') ) {
-								$block['html']['challenge_captcha'] = $this->createCaptcha(substr($this->config['salt'], 5, 15)); 
-							}
-							//App may have a default layout, then each page may have its own layout
-							if ($layout = $page['layout']??$app['app_layouts']['page']??$block['template']['layout']??null) {//=1 but set $layout
-								$this->view->setLayout($layout); //unlike edit, layout could be stored in app folder
-							}							
-						}
+						$this->view->addBlock($section, $block, $page['type'] .'::'. $app['name'] .'::render');		
 					}
-
-					$this->view->addBlock($section, $block, $page['type'] .'::'. $app['name'] .'::render');		
+					$next_actions['Collection::getCollectionsByPageId'] = [ $page['id'], "slug" => 1 ];
+					$next_actions['Collection::getRelatedItems'] 		= [ $page['id'], "slug" => 1 ];
 				}
-				$next_actions['Collection::getCollectionsByPageId'] = [ $page['id'], "slug" => 1 ];
-				$next_actions['Collection::getRelatedItems'] 		= [ $page['id'], "slug" => 1 ];
 			}
 			//subapp pages
 			if ( !empty($app['app_sub']) ){
@@ -2045,62 +2074,66 @@ class App extends Page {
 				$block = $this->prepareMain($query, $app, null);
 
 				$response = $this->appProcess($app, 'renderIndex', $block);
-				$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ]);
-				foreach ( ($response['blocks']??[]) AS $section => $block) {
-					if ($section == 'main'){					
-						if ($page = $this->readSlug('/'. $app['name'], 'Link') ){//if Link to this page exists
-							if ( ! $this->canView($page) ){	
+				if ( empty($response['result']) || $response['result'] == 'error' ){
+					$status['result'] = 'error';
+					$status['message'][] = $response['message']??$this->trans('Invalid response from app');
+				} else {
+					$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ]);
+					foreach ( ($response['blocks']??[]) AS $section => $block) {
+						if ($section == 'main'){					
+							if ($page = $this->readSlug('/'. $app['name'], 'Link') ){//if Link to this page exists
+								if ( ! $this->canView($page) ){	
+									return false;
+								}
+								$block['api']['page'] = $page; 
+							}						
+							if ( $block['api']['total'] ){	
+								//count subapp's entries
+								if ( !empty($block['api']['rows']) AND !empty($app['app_sub']) ){
+									$block['api']['subapp'] = $this->countSubPages($app, array_column($block['api']['rows'], 'id') );	
+								}
+
+								if ($this->view->html){				
+									$block['links']['api'] = rtrim($this->slug('App::render', ['app' => $app['slug'], 'slug' => ''] ), '/');
+									$block['links']['edit'] = $block['links']['api'];
+									$block['links']['datatable']['creator'] = $this->slug('Profile::render');
+									$block['html']['rowCount'] = 48;
+									$block['html']['current_app'] = $app['name'];
+									$block['html']['app_label'] = $this->trans($app['label']);
+									$block['html']['app_label_plural'] = $this->trans($this->pluralize($app['label']));
+		
+									if ( empty($block['api']['page']['title']) ){
+										$block['api']['page']['title'] = $block['html']['app_label_plural'];
+									}
+									if ( !str_contains($app['app_users']??'', '_client') OR empty($app['app_permissions']['client_write']) ){ //app menu_config to hide create new button
+										$block['html']['app_readonly'] = 1;
+									}	
+
+									if ( !empty($app['app_templates']['collection']) ) {
+										$block['template']['file'] = $app['app_templates']['collection'];//"page";
+									} elseif ( !empty($app['app_templates']['collection_string']) ) { //not really neccessary
+										$block['template']['string'] = base64_encode($app['app_templates']['collection_string']);
+									} 
+									if ( !empty($block['template']['file']) AND is_file($this->path . $app['slug'] . ($app['id']??'') .'/'. $block['template']['file'] .'.tpl') 
+									){
+										$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
+									} elseif ( empty($block['template']['file']) ){
+										$block['template']['file'] = "datatable";
+									}
+									//App may have a default layout, then each page may have its own layout
+									if ($layout = $page['layout']??$app['app_layouts']['collection']??$block['template']['layout']??null ){//=1 but set $layout
+										$this->view->setLayout($layout); //unlike edit, layout could be stored in app folder
+									}
+								}
+							} else {
 								return false;
 							}
-							$block['api']['page'] = $page; 
-						}						
-						if ( $block['api']['total'] ){	
-							//count subapp's entries
-							if ( !empty($block['api']['rows']) AND !empty($app['app_sub']) ){
-								$block['api']['subapp'] = $this->countSubPages($app, array_column($block['api']['rows'], 'id') );	
-							}
-
-							if ($this->view->html){				
-								$block['links']['api'] = rtrim($this->slug('App::render', ['app' => $app['slug'], 'slug' => ''] ), '/');
-								$block['links']['edit'] = $block['links']['api'];
-								$block['links']['datatable']['creator'] = $this->slug('Profile::render');
-								$block['html']['rowCount'] = 48;
-								$block['html']['current_app'] = $app['name'];
-								$block['html']['app_label'] = $this->trans($app['label']);
-								$block['html']['app_label_plural'] = $this->trans($this->pluralize($app['label']));
-	
-								if ( empty($block['api']['page']['title']) ){
-									$block['api']['page']['title'] = $block['html']['app_label_plural'];
-								}
-								if ( !str_contains($app['app_users']??'', '_client') OR empty($app['app_permissions']['client_write']) ){ //app menu_config to hide create new button
-									$block['html']['app_readonly'] = 1;
-								}	
-
-								if ( !empty($app['app_templates']['collection']) ) {
-									$block['template']['file'] = $app['app_templates']['collection'];//"page";
-								} elseif ( !empty($app['app_templates']['collection_string']) ) { //not really neccessary
-									$block['template']['string'] = base64_encode($app['app_templates']['collection_string']);
-								} 
-								if ( !empty($block['template']['file']) AND is_file($this->path . $app['slug'] . ($app['id']??'') .'/'. $block['template']['file'] .'.tpl') 
-								){
-									$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
-								} elseif ( empty($block['template']['file']) ){
-									$block['template']['file'] = "datatable";
-								}
-								//App may have a default layout, then each page may have its own layout
-								if ($layout = $page['layout']??$app['app_layouts']['collection']??$block['template']['layout']??null ){//=1 but set $layout
-									$this->view->setLayout($layout); //unlike edit, layout could be stored in app folder
-								}
-							}
-						} else {
-							return false;
-						}
-					}	
-					$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::renderIndex');		
-				}				
-				$next_actions['Collection::getCollectionItems'] = [ 'App::'. $app['name'], NULL, "slug" => 1 ];
-				$this->router->registerQueue($next_actions);	
-
+						}	
+						$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::renderIndex');		
+					}				
+					$next_actions['Collection::getCollectionItems'] = [ 'App::'. $app['name'], NULL, "slug" => 1 ];
+					$this->router->registerQueue($next_actions);	
+				}	
 				!empty($status) && $this->view->setStatus($status);
 				return $block['api']['page']??[
 					'id' => $app['slug'], //should return an id
@@ -2168,53 +2201,56 @@ class App extends Page {
 			$block['api']['page'] = $page;
 
 			$response = $this->appProcess($app, 'renderCollection', $block);
-			$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ]);
-			foreach ( ($response['blocks']??[]) AS $section => $block) {
-				if ($section == 'main'){
-					//remove fields other than client_editable/readonly
-					foreach ( ($app['app_fields']??[]) AS $key => $field) {
-						if ( empty($field['visibility']) ){
-							//treat it as client_editable
-						} elseif ( !str_contains($field['visibility'], 'client_') OR $field['visibility'] == 'client_hidden' ){
-							unset($block['api']['page']['meta'][ $key ], $block['api']['page']['meta'][ $app['slug'] .'_'. $key]);
+			if ( empty($response['result']) || $response['result'] == 'error' ){
+				$status['result'] = 'error';
+				$status['message'][] = $response['message']??$this->trans('Invalid response from app');
+			} else {
+				$this->runHook('App::'. $app['name'] .'::'. __FUNCTION__, [ &$response['blocks'] ]);
+				foreach ( ($response['blocks']??[]) AS $section => $block) {
+					if ($section == 'main'){
+						//remove fields other than client_editable/readonly
+						foreach ( ($app['app_fields']??[]) AS $key => $field) {
+							if ( empty($field['visibility']) ){
+								//treat it as client_editable
+							} elseif ( !str_contains($field['visibility'], 'client_') OR $field['visibility'] == 'client_hidden' ){
+								unset($block['api']['page']['meta'][ $key ], $block['api']['page']['meta'][ $app['slug'] .'_'. $key]);
+							}
 						}
-					}
-					//count subapp's entries
-					if ( !empty($block['api']['rows']) AND !empty($app['app_sub']) ){
-						$block['api']['subapp'] = $this->countSubPages($app, array_column($block['api']['rows'], 'id') );	
-					}
+						//count subapp's entries
+						if ( !empty($block['api']['rows']) AND !empty($app['app_sub']) ){
+							$block['api']['subapp'] = $this->countSubPages($app, array_column($block['api']['rows'], 'id') );	
+						}
 
-					if($this->view->html){				
-						$block['links']['edit'] = rtrim($this->slug('App::render', ['app' => $app['slug'], 'slug' => ''] ), '/');
-						$block['links']['datatable']['creator'] = $this->slug('Profile::render');
-						$block['html']['rowCount'] = 48;
-						$block['html']['current_app'] = $app['name'];
-						$block['html']['app_label'] = $this->trans($app['label']);
-						$block['html']['app_label_plural'] = $this->trans($this->pluralize($app['label']));
-				
-						if ( !empty($app['app_templates']['collection']) ) {
-							$block['template']['file'] = $app['app_templates']['collection'];//"page";
-						} elseif ( !empty($app['app_templates']['collection_string']) ) { //not really neccessary
-							$block['template']['string'] = base64_encode($app['app_templates']['collection_string']);
-						} 
-						if ( !empty($block['template']['file']) AND is_file($this->path . $app['slug'] . ($app['id']??'') .'/'. $block['template']['file'] .'.tpl') 
-						){
-							$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
-						} elseif ( empty($block['template']['file']) ){
-							$block['template']['file'] = "app_collection";//page_collection
-						}
-						//App may have a default layout, then each page may have its own layout
-						if ($layout = $page['layout']??$app['app_layouts']['collection']??$block['template']['layout']??null ){//=1 but set $layout
-							$this->view->setLayout($layout); //unlike edit, layout could be stored in app folder
+						if($this->view->html){				
+							$block['links']['edit'] = rtrim($this->slug('App::render', ['app' => $app['slug'], 'slug' => ''] ), '/');
+							$block['links']['datatable']['creator'] = $this->slug('Profile::render');
+							$block['html']['rowCount'] = 48;
+							$block['html']['current_app'] = $app['name'];
+							$block['html']['app_label'] = $this->trans($app['label']);
+							$block['html']['app_label_plural'] = $this->trans($this->pluralize($app['label']));
+					
+							if ( !empty($app['app_templates']['collection']) ) {
+								$block['template']['file'] = $app['app_templates']['collection'];//"page";
+							} elseif ( !empty($app['app_templates']['collection_string']) ) { //not really neccessary
+								$block['template']['string'] = base64_encode($app['app_templates']['collection_string']);
+							} 
+							if ( !empty($block['template']['file']) AND is_file($this->path . $app['slug'] . ($app['id']??'') .'/'. $block['template']['file'] .'.tpl') 
+							){
+								$block['template']['directory'] = 'resources/public/templates/app/'. $app['slug'] . ($app['id']??''); 
+							} elseif ( empty($block['template']['file']) ){
+								$block['template']['file'] = "app_collection";//page_collection
+							}
+							//App may have a default layout, then each page may have its own layout
+							if ($layout = $page['layout']??$app['app_layouts']['collection']??$block['template']['layout']??null ){//=1 but set $layout
+								$this->view->setLayout($layout); //unlike edit, layout could be stored in app folder
+							}
 						}
 					}
+					$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::renderCollection');		
 				}
-				$this->view->addBlock($section, $block, 'App::'. $app['name'] .'::renderCollection');		
+				$next_actions['Collection::getCollectionItems'] = [ 'App::'. $app['name'], $page['id'], "slug" => 1 ];
+				$this->router->registerQueue($next_actions);	
 			}
-			$next_actions['Collection::getCollectionItems'] = [ 'App::'. $app['name'], $page['id'], "slug" => 1 ];
-			$this->router->registerQueue($next_actions);	
-
-			$status['result'] = 'success';
 			!empty($status) && $this->view->setStatus($status);
 			
 			return $page;

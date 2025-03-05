@@ -649,10 +649,9 @@ trait Application {
 					}	
 				}
 			}
-			unset($response['result']);
-			return $response;
+			//unset($response['result']);
 		} 
-		return [];
+		return $response??null;
 	}
 
 	protected function registerHook($hook_name, $params) {

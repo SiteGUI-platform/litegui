@@ -585,7 +585,7 @@ var dragula = require('dragula');
       }
       result += '<div class="mt-2 text-secondary">'
       if (item.status) {
-        result += '<span class="sg-status small float-end card-text status__'+ __sanitizeHTML(item.status.toLowerCase()) +'">'+ __sanitizeHTML(item.status) +'</span>'
+        result += '<span class="sg-status small float-end card-text status__'+ __sanitizeHTML(item.status.replaceAll(' ', '_').toLowerCase()) +'">'+ __sanitizeHTML(item.status) +'</span>'
       }
       result += '<div class="small">'
       if (item.avatar){

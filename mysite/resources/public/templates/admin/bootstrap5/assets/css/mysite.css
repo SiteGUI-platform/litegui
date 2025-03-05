@@ -221,10 +221,13 @@ hr.or:after {
     color: #8c8b8b;
     font-size: 16px;
 }
-  
+.form-control, .form-select {
+    color: #555 !important;
+}  
 .input-name {
     width: 100%;
-    border: 1px dashed lightyellow;;
+    border: 1px dashed lightyellow;
+    color: rgba(var(--bs-success-rgb),var(--bs-text-opacity))!important;
 }
 /*Make placeholder text blinking */
 .input-name::-webkit-input-placeholder {
@@ -395,9 +398,7 @@ hr.or:after {
 .table-custom th {
     border-bottom: 2px solid #ddd !important;
 }
-.form-control, .form-select {
-    color: #555 !important;
-}
+
 .bg-lime {
     background-color: rgb(222,255,0) !important;
 }

@@ -39,13 +39,13 @@ trait SubApp {
 					unset($page['sub'][ $name ]['sub']); //prevent loop here
 					$page['sub'][ $name ]['hide_success_message'] = true; //hide success message for subapp entry
 					//set parent so subapp may refer back to parent
-					$page['sub'][ $name ]['parent__id'] = $page_info['id'];
-					$page['sub'][ $name ]['parent__name'] = $page['name']??$page_info['name']??''; //this is an array
-					$page['sub'][ $name ]['parent__slug'] = $page['slug']??$page_info['slug']??'';
-					$page['sub'][ $name ]['parent__type'] = $page_info['type']??$page['slug']??'';
-					$page['sub'][ $name ]['parent__subtype'] = $page_info['subtype']??$page['slug']??'';
-					$page['sub'][ $name ]['parent__creator'] = $page_info['creator']??null;
-					$page['sub'][ $name ]['parent__status'] = $page['status']??$page_info['status']??null;
+					$page['sub'][ $name ]['_parent']['id'] = $page_info['id'];
+					$page['sub'][ $name ]['_parent']['name'] = $page['name']??$page_info['name']??''; //this is an array
+					$page['sub'][ $name ]['_parent']['slug'] = $page['slug']??$page_info['slug']??'';
+					$page['sub'][ $name ]['_parent']['type'] = $page_info['type']??$page['slug']??'';
+					$page['sub'][ $name ]['_parent']['subtype'] = $page_info['subtype']??$page['slug']??'';
+					$page['sub'][ $name ]['_parent']['creator'] = $page_info['creator']??null;
+					$page['sub'][ $name ]['_parent']['status'] = $page['status']??$page_info['status']??null;
 
 					$class_app = str_replace('Core\Traits', 'Core\App', __NAMESPACE__); //SubApps cannot be Core app
 					if ($this instanceof $class_app ){
@@ -167,9 +167,9 @@ trait SubApp {
 							//get App to process fields for new record
 							$response = $this->appProcess($subapp, 'edit', 'new');	
 
-							if ( empty($response['blocks']) ){
+							if ( empty($response['result']) || $response['result'] == 'error'){
 								$status['result'] = 'error';
-								$status['message'][] = $this->trans('Invalid response from app');
+								$status['message'][] = $response['message']??$this->trans('Invalid response from app');
 							} else {
 								foreach ( ($response['blocks']??[]) as $section => $sub_block) {
 									if ($section == 'main'){
@@ -320,9 +320,9 @@ trait SubApp {
 							//get App to process fields for new record
 							$response = $this->appProcess($subapp, 'edit', 'new');	//should be clientView
 
-							if ( empty($response['blocks']) ){
+							if ( empty($response['result']) || $response['result'] == 'error' ){
 								$status['result'] = 'error';
-								$status['message'][] = $this->trans('Invalid response from app');
+								$status['message'][] = $response['message']??$this->trans('Invalid response from app');
 							} else {
 								foreach ( ($response['blocks']??[]) as $section => $sub_block) {
 									if ($section == 'main'){
@@ -371,12 +371,12 @@ trait SubApp {
 										$block['api']['subapp'][ $name ]['fields'] = $fields??null;	
 									} 
 								}								
-							}
-							//$block['api']['subapp'][ $name ]['hide'] = $subapp['app_hide']; 
-							//$block['api']['subapp'][ $name ]['hide']['wysiwyg'] = 1; //disable wysiwyg
-							//$block['api']['subapp'][ $name ]['fields'] = $subapp['app_fields']; 
-							//force displaying subapp in separated tab -NOT ONLY when creating new entry if empty($page_id) 
-							//unset($block['api']['subapp'][ $name ]['hide']['tabapp']);
+								//$block['api']['subapp'][ $name ]['hide'] = $subapp['app_hide']; 
+								//$block['api']['subapp'][ $name ]['hide']['wysiwyg'] = 1; //disable wysiwyg
+								//$block['api']['subapp'][ $name ]['fields'] = $subapp['app_fields']; 
+								//force displaying subapp in separated tab -NOT ONLY when creating new entry if empty($page_id) 
+								//unset($block['api']['subapp'][ $name ]['hide']['tabapp']);
+							}	
 						}
 					}	
 				}
@@ -441,9 +441,9 @@ trait SubApp {
 						//get App to process fields for new record
 						$response = $this->appProcess($subapp, 'edit', 'new');	//should be clientView
 
-						if ( empty($response['blocks']) ){
+						if ( empty($response['result']) || $response['result'] == 'error' ){
 							$status['result'] = 'error';
-							$status['message'][] = $this->trans('Invalid response from app');
+							$status['message'][] = $response['message']??$this->trans('Invalid response from app');
 						} else {
 							foreach ( ($response['blocks']??[]) as $section => $sub_block) {
 								if ($section == 'main'){
@@ -495,20 +495,20 @@ trait SubApp {
 									$block['api']['subapp'][ $name ]['fields'] = $fields;	
 								} 
 							}								
-						}
 
-						if ( empty($subapp['app_hide']['image']) ){
-							$block['api']['subapp'][ $name ]['show']['image']['type'] = 'file';
-							$block['api']['subapp'][ $name ]['show']['image']['label'] = $this->trans('Featured Image');
+							if ( empty($subapp['app_hide']['image']) ){
+								$block['api']['subapp'][ $name ]['show']['image']['type'] = 'file';
+								$block['api']['subapp'][ $name ]['show']['image']['label'] = $this->trans('Featured Image');
+							}	
+							if ( empty($subapp['app_hide']['content']) ){
+								$block['api']['subapp'][ $name ]['show']['content']['type'] = 'textarea';
+							}
+							//$block['api']['subapp'][ $name ]['hide'] = $subapp['app_hide']; 
+							//$block['api']['subapp'][ $name ]['hide']['wysiwyg'] = 1; //disable wysiwyg
+							//force displaying subapp in separated tab ---NOT ONLY when creating new entry if ( empty($page_id) ) 
+							//unset($block['api']['subapp'][ $name ]['hide']['tabapp']);
+							//$block['api']['subpages'][ $name ]['html']['ajax'] = 1;
 						}	
-						if ( empty($subapp['app_hide']['content']) ){
-							$block['api']['subapp'][ $name ]['show']['content']['type'] = 'textarea';
-						}
-						//$block['api']['subapp'][ $name ]['hide'] = $subapp['app_hide']; 
-						//$block['api']['subapp'][ $name ]['hide']['wysiwyg'] = 1; //disable wysiwyg
-						//force displaying subapp in separated tab ---NOT ONLY when creating new entry if ( empty($page_id) ) 
-						//unset($block['api']['subapp'][ $name ]['hide']['tabapp']);
-						//$block['api']['subpages'][ $name ]['html']['ajax'] = 1;
 					}
 				}	
 			}

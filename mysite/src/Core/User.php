@@ -1266,7 +1266,7 @@ class User extends \LiteGUI\User {
 				if (empty($user['groups']) OR !is_array($user['groups'])){
 					$user['groups'] = []; //make sure it is array
 				}
-				if ($groupObj && $groupObj->updateUserGroups($user['id'], $user['groups']) ){
+				if ($groupObj && $groupObj->updateUserGroups($user['id'], $user['groups'], 'Active', 'remove_others') ){
 					$error--;
 					$status['message'][] = $this->trans(':item updated successfully', ['item' => $this->class ]);
 				}
