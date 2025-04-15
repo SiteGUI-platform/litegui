@@ -15,13 +15,16 @@
 			<div class="col ps-md-0 px-2">
 				{if $page.id > 0}<input type="hidden" name="{$prefix}[id]" value="{$page.id}">{/if}
 				{if $page.subtype}<input type="hidden" name="{$prefix}[subtype]" value="{$page.subtype}">{/if}
-				{if ! $app.hide.name} {$app.hide.name = shown} {*<!-- disable for first language -->*}
-					<input class="input-name form-control-lg text-success" type="text" name="{$prefix}[name][{$site.language}]" placeholder="{'Label'|trans}" value="{$page.name[$site.language]}" required {if ! $page.name[$site.language]}autofocus{/if}>	
-				{else}
-				  <label class="col-form-label pt-2">
-						<span class="form-control-lg text-success ps-0"><span class="text-dark me-2">{$html.app_label|default: $page.type}</span> {if $page.name[$site.language]} {$page.name[$site.language]}{elseif $page.id}#{$page.id}{/if}</span> 
-					</label>	
-				{/if}
+				<div class="input-group">
+					{if ! $app.hide.name} {$app.hide.name = shown} {*<!-- disable for first language -->*}
+						<input class="input-name form-control-lg form-control text-success rounded-2" type="text" name="{$prefix}[name][{$site.language}]" placeholder="{'Label'|trans}" value="{$page.name[$site.language]}" required {if ! $page.name[$site.language] AND !$system.sgframe}autofocus{/if}>
+					{else}
+					  <label class="input-name form-control-lg form-control ps-0">
+						<span class="text-dark me-2 {if $page.name[$site.language]}d-none{/if}">{$html.app_label|default: $page.type}</span> <span class="text-success">{if $page.name[$site.language]} {$page.name[$site.language]}{elseif $page.id}#{$page.id}{/if}</span>
+						</label>	
+					{/if}
+					{if $links.uri}<a class="btn text-secondary input-group-text mt-2 pt-1" target="_blank" href="{$links.uri}"><i class="bi bi-box-arrow-up-right"></i></a>{/if}
+				</div>
 				{block name=APP_header}{/block}
 			</div>	
 			{if ! ($app.hide.tabcontent OR $app.hide.locales) }
@@ -80,7 +83,7 @@
 					<button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-versions" role="tab" aria-controls="tab-versions" aria-selected="false">{"Versions"|trans}</button>
 				</li>					
 			{/if}
-				{block name=APP_tabname_end hide}{$smarty.block.child}{/block}
+				{block name=APP_tabname_extra hide}{$smarty.block.child}{/block}
 			</ul>
 
 			<!-- Tab panes -->
@@ -113,10 +116,7 @@
 							<div class="form-group row mb-3">
 								<label class="col-sm-3 col-form-label text-sm-end">{'Slug'|trans}</label>
 								<div class="col-sm-{$colwidth}">
-									<div class="input-group">
-										<input class="form-control" type="text" name="{$prefix}[slug]" value="{$page.slug}" {if $page.slug ==404}readonly{/if}>
-										{if $page.id}<a class="btn text-primary input-group-text" target="_blank" href="{$links.uri}"><i class="bi bi-box-arrow-up-right"></i></a>{/if}
-									</div>
+									<input class="form-control" type="text" name="{$prefix}[slug]" value="{$page.slug}" {if $page.slug ==404}readonly{/if}>
 									{if $page.type eq Link}
 									<small class="form-text text-secondary">{"This is a link, no content will be served"|trans}</small> 
 									{/if} 		
@@ -507,6 +507,7 @@
 					</div>	
 				</div>	
 			{/if}					
+			{block name=APP_tabcontent_extra hide}{$smarty.block.child}{/block}
 			</div>	
 		</div>
 		<div class="card-footer text-center">

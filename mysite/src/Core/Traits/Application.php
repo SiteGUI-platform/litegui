@@ -649,10 +649,9 @@ trait Application {
 					}	
 				}
 			}
-			unset($response['result']);
-			return $response;
+			//unset($response['result']);
 		} 
-		return [];
+		return $response??null;
 	}
 
 	protected function registerHook($hook_name, $params) {
@@ -1059,6 +1058,9 @@ trait Application {
 				}*/
 
 				$block['api']['rows'][ $key ] = $this->preparePage($data, !$show_links);
+				if ( empty($block['api']['rows'][ $key ]['name']) ){
+					$block['api']['rows'][ $key ]['name'] = $this->trans($app['label']);
+				}
 				//remove tags for subapp's content
 				if ( $strip_tags AND !empty($block['api']['rows'][ $key ]['content']) ){
 					//$block['api']['rows'][ $key ]['content'] = strip_tags($block['api']['rows'][ $key ]['content']);

@@ -450,8 +450,6 @@ CREATE TABLE `mysite1_usermeta` (
 
 LOCK TABLES `mysite1_usermeta` WRITE;
 /*!40000 ALTER TABLE `mysite1_usermeta` DISABLE KEYS */;
-INSERT INTO `mysite1_usermeta` VALUES
-(1,1023,'reset_token','YmFhMDI2M2I5M2Q1OWQ3ZDE5Yzk0MjgxMWVmYzA0ZTZmMDQxOGQ2OTFjYjBjZGRiYjZiMmQ0ODI2ODg0MDRiYw','sm@litegui.org','1735275416',NULL);
 /*!40000 ALTER TABLE `mysite1_usermeta` ENABLE KEYS */;
 UNLOCK TABLES;
 

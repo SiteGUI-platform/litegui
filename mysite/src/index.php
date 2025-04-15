@@ -102,7 +102,7 @@ class SiteIndex {
                 if ( str_starts_with($url, $this->config['system']['url'] .'/') OR str_starts_with($url, 'https://'. $this->config['site']['account_url'] .'/account') ){ //ensure it is actually my.account or system.url (unpublished preview)
                     $url .= '?oauth='. $_GET['oauth'] 
                          .'&login=step2'
-                         .'&token='. $_SESSION['token'] . str_replace('/', '', $_SESSION[ $this->passport ]['auth_request_from']??$this->config['site']['id'] )
+                         .'&token='. $_SESSION['token'] . str_replace('/', '', $this->config['site']['id']??$_SESSION[ $this->passport ]['auth_request_from']??'' )
                          .'&requester='. $this->encode('https://'. $this->config['site']['url'] . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) );
                     if ( empty($_GET['preview']) ){
                         $url .= '&initiator='. $_GET['initiator']; //redirect back to my.account when it is started by my.account                        
@@ -131,8 +131,11 @@ class SiteIndex {
 					
 					if ($page === FALSE) { // main app may return 0 if 404 is already handled
                         $classPage = __NAMESPACE__ .'\\Page';
-                        //GIVE App a chance to process index page after Page not found
-                        if (get_class($queue['target'][0]) == $classPage) { 
+                        
+                        if ( !empty($queue['params']['slug']) AND $queue['params']['slug'] == 'robots.txt' ){ //return default robots.txt
+                            echo "sitemap: https://". $this->config['site']['url'] ."/sitemap.xml";
+                            exit;
+                        } elseif (get_class($queue['target'][0]) == $classPage ){//Let App process index page after Page not found 
                             $classApp = __NAMESPACE__ .'\\App';
                             if (empty($this->container[$classApp])) {
                                 $this->container[$classApp] = new $classApp($this->config, $this->dbm, $this->router, $this->view, $this->user);

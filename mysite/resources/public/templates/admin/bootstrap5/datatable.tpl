@@ -3,7 +3,7 @@
 	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.css"/>
 	<script defer type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-bootgrid/1.3.1/jquery.bootgrid.min.js"></script>
 	<link rel="stylesheet" type="text/css" href="{$system.cdn}/{$template}/assets/css/jkanban.css?v=15">	
-	<script type="text/javascript" src="{$system.cdn}/{$template}/assets/js/jkanban.js?v=40"></script>
+	<script type="text/javascript" src="{$system.cdn}/{$template}/assets/js/jkanban.js?v=41"></script>
 	<script type="text/javascript">
 	  document.addEventListener("DOMContentLoaded", function(e){
 			//extend bootgrid to add columns when loading via ajax, also support kanban
@@ -123,7 +123,7 @@
 							$('<style for="'+ cls +'">.'+ cls +'{ldelim}background-color: rgb('+ rgb.r +','+ rgb.g +','+ rgb.b +'); color: '+ rgb.tc +'}</style>').prependTo($('head'))
 						}	
 						return $('<span>')
-							.addClass(cls)
+							.addClass('sg-status '+ cls)
 							.text( Sitegui.trans(row.status) )
 							.wrap('<p/>')
 							.parent()
@@ -151,7 +151,7 @@
 							thisLinks += $('<button type="button" class="btn btn-sm border-0 text-primary btn-outline-light rounded-circle js-propagate" data-confirm="delete" data-name="id"><i class="bi bi-trash"></i></button>')
 								.attr('data-url', ajaxResponse.links.delete +'{if $system.sgframe}?sgframe=1{/if}')
 								.attr('data-value', row.id)
-								.attr('data-subapps', (ajaxResponse.html && ajaxResponse.html.subapps)? ajaxResponse.html.subapps : '')
+								.attr('data-subapps', (ajaxResponse.html && ajaxResponse.html.subapps)? Object.values(ajaxResponse.html.subapps).join(', ') : '')
 								.wrap('<p/>')
 								.parent()
 								.html()
@@ -185,7 +185,7 @@
 								.parent()
 								.html()
 						}	
-			      return '<div class="btn-toolbar float-end flex-nowrap">'+ thisLinks +'</div>';
+			      return '<div class="btn-toolbar float-end flex-nowrap position-relative">'+ thisLinks +'</div>';
 			    },
 					html: function(column, row){ 
 						//be careful as this returns HTML, make sure to escape HTML to prevent stored XSS like <img src=x onerror=alert(1)>
@@ -423,13 +423,27 @@
 						        	+'&format=json&csrf_token='+ window.csrf_token 
 						        $.post(href, post, function(data) {
 						          if (data.status.result == 'success'){
-						          	$(ev.currentTarget).closest('[data-row-id]').addClass('text-decoration-line-through')
-						          	$(ev.currentTarget).closest('.item').addClass('text-decoration-line-through')
-						          	$(ev.currentTarget).closest('.kanban-item').addClass('text-decoration-line-through')
+						          	let _wrapper = ev.currentTarget.closest('[data-row-id]') || ev.currentTarget.closest('.item') || ev.currentTarget.closest('.kanban-item')
+						          	if (_wrapper){
+						          		$(_wrapper).addClass('text-decoration-line-through')
+						          		if (data.page.status && $(_wrapper).find('.sg-status')){
+						          			$(_wrapper).find('.sg-status')
+						          			.removeClass('status__'+ $(_wrapper).find('.sg-status').text().replaceAll(' ', '_').toLowerCase())
+						          			.addClass('status__'+ data.page.status.replaceAll(' ', '_').toLowerCase())
+						          			.text(data.page.status)
+						          		}
+						          	}	
 						          	if ($(ev.currentTarget).closest('.kanban-item').get(0)) { //move item
 						          		let target = response.html.app_tick.params.split('=')
-						          		if (target[1] && $('.kanban-container [data-id="'+ target[1] +'"]')){
-						          			$('.kanban-container [data-id="'+ target[1] +'"] .kanban-drag').append($(ev.currentTarget).closest('.kanban-item'))
+						          		if (target[1] && $('.kanban-container [data-id="'+ target[1] +'"]').get(0)){
+						          			$(ev.currentTarget).closest('.kanban-board').find('.kanban-board-count').text(
+									    				'('+ --$(ev.currentTarget).closest('.kanban-board').find('.kanban-drag .kanban-item').length +')'
+						          			)
+						          			target[1] = $('.kanban-container [data-id="'+ target[1] +'"]').removeClass('fold')
+						          			target[1].find('.kanban-drag').append($(ev.currentTarget).closest('.kanban-item'))
+						          			target[1].find('.kanban-board-count').text(
+									    				'('+ target[1].find('.kanban-drag .kanban-item').length +')'
+									    			)
 						          		}
 						          	}
 						          } 
@@ -624,13 +638,13 @@
 			    templates: { 
 			    	header: '<div id="{literal}{{ctx.id}}" class="{{css.header}}{/literal} fade show">\
 				    	<div class="row">\
-				    		<div class="col-auto col-sm-4 pb-2 pb-sm-0">\
+				    		<div class="col-auto col-sm-4 pb-2 pb-sm-0 dropend sg-hover">\
 				    			<h5 class="{if !$forapp}mt-2{/if} text-success sg-app-header">\
 				    				{if !$forapp}\
-											<i class="sg-app-icon fs-4 ps-sm-2 pe-3 text-primary bi \
+					    				<i class="sg-app-icon fs-4 ps-sm-2 pe-2 text-primary bi \
 					    				{if $links.edit AND !$html.app_readonly}bi-plus-circle-dotted\" data-url="{$links.edit}{$links.edit2}?sgframe=1" data-title="{"New :item"|trans:["item" => $html.app_label] }" data-bs-toggle="modal" data-bs-target="#dynamicModal\
 					    				{else}bi-list-ol float-start{/if}" role="button"></i>\
-					    				<span class="sg-app-name">{$html.app_label_plural}\
+				    					<span class="sg-app-name" type="button" data-bs-toggle-NO="dropdown" aria-expanded="false">{$html.app_label_plural}\
 				    						{if !$system.sgframe}<i class="js-sg-expand sg-app-configure bi bi-arrows ps-2 fs-6 text-secondary" role="button"></i>{/if}\
 				    						{if $links.configure}<i class="sg-app-configure bi bi-gear ps-2 fs-6 text-secondary" data-url="{$links.configure}" data-title="{"Configure :item"|trans:["item" => $html.app_label] }" data-bs-toggle="modal" data-bs-target="#dynamicModal" role="button"></i>\
 				    						{/if}\
@@ -643,6 +657,9 @@
 				    						<p class="{literal}{{css.infos}}{/literal}"></p>\
 				    					</small>\
 				    				{/if}\
+				    				<div class="js-sg-submenu sg-app-listing sg-hover-visible show dropdown-menu dropdown-menu-scroll px-2 mt-1">{foreach $html.subapps AS $a => $alias}{if $a != $html.current_app}\
+				    						<li><a class="dropdown-item" href="{$links.api|replace:"{$html.current_app|lower}":"{$a|lower}"}">{$alias}</a></li>\
+				    					{/if}{/foreach}</div>\
 				    			</h5>\
 				    		</div>\
 				    		{literal}\
@@ -703,7 +720,7 @@
 				
 				// Setup listener to use ajax loading	
 				this.initListener = function(container) {
-					$('.sg-app-listing a').on('click', function (ev) {
+					$('body').on('click', '.sg-app-listing a', function (ev) {
 						ev.preventDefault()
 						let $state = {
 							url: $(this).attr('href')
@@ -721,18 +738,18 @@
 							$('.sg-app-listing').closest('.nav-item').find('.nav-link span').text($label)
 							if ( ajaxResponse.html && ajaxResponse.html.app_readonly){
 								$('.sg-app-icon')
-									.addClass('bi-list-ol')
-									.addClass('pe-none')
+									.addClass('bi-list-ol pe-none float-start')
 									.removeClass('bi-plus-circle-dotted')
 							} else {
 								$('.sg-app-icon')
 									.attr('data-url', (ajaxResponse.html && ajaxResponse.links)? ajaxResponse.links.edit +'?sgframe=1' : '#')
 									.attr('href', '#')
+									.attr('data-bs-target', '#dynamicModal')
+									.attr('data-bs-toggle', 'modal')
 									.attr('data-title', Sitegui.trans("New :item", {
 										"item": ajaxResponse.html.app_label
 									} ) )
-									.removeClass('bi-list-ol')
-									.removeClass('pe-none')
+									.removeClass('bi-list-ol pe-none float-start')
 									.addClass('bi-plus-circle-dotted')
 							}
 							$('.sg-app-name').text($label)
@@ -747,6 +764,20 @@
 										})
 									)
 								)
+							}
+							$('.js-sg-submenu').text('')
+							if (ajaxResponse.subapp && ajaxResponse.subapp.show){
+								for (const [key, value] of Object.entries(ajaxResponse.subapp.show)) {
+									if (key != ajaxResponse.html.current_app){
+									  $('.js-sg-submenu').append(
+									  	$('<a class="dropdown-item"></a>')
+									  	.text(Sitegui.trans(value.single))
+									  	.attr('href', ajaxResponse.links.api.replace(ajaxResponse.html.current_app.toLowerCase(), key.toLowerCase()))
+									  	.wrap('<li>')
+									  	.parent()
+									  )
+									}  
+								}
 							}
 							$(ev.target).addClass('active rounded')
 							$state.page = ajaxResponse.html.title
@@ -916,7 +947,8 @@
 				    		post.page.fields = {}
 				    		post.page.fields[ $input ] = $(target).parent().attr('data-id')
 				    	} else {
-				    		post.page[ $input ] = $(target).parent().attr('data-id')
+				    		post.page.fields = {}
+				    		post.page.fields[ $input ] = post.page[ $input ] = $(target).parent().attr('data-id')
 				    	}
 			        $.post(href, post, function(data) {
 		            var response = data // already a json object jQuery.parseJSON(data);
@@ -981,16 +1013,18 @@
 					$(container).addClass('d-none')
 					//console.log(kanbanOptions)
 					var jkanban = new jKanban(kanbanOptions);
-					jkanban.drake.on('over', function(el, container, source){
-						if ( $(container.parentNode).is('.fold') ){
-							$(container.parentNode).removeClass('fold').addClass('was-fold')
-						} 
-					})
-					jkanban.drake.on('out', function(el, container, source){
-						if ( $(container.parentNode).is('.was-fold') ){
-							$(container.parentNode).addClass('fold').removeClass('was-fold')
-						} 
-					})
+					if (jkanban.drake){
+						jkanban.drake.on('over', function(el, container, source){
+							if ( $(container.parentNode).is('.fold') ){
+								$(container.parentNode).removeClass('fold').addClass('was-fold')
+							} 
+						})
+						jkanban.drake.on('out', function(el, container, source){
+							if ( $(container.parentNode).is('.was-fold') ){
+								$(container.parentNode).addClass('fold').removeClass('was-fold')
+							} 
+						})
+					}	
 					$(container +'-kanban-wrapper .kanban-container').addClass('mx-auto')
 					if (Object.keys(kanbanOptions.boards).length > 4){
 						Object.values(kanbanOptions.boards).forEach(function(el, index){
@@ -1022,7 +1056,7 @@
 
 							if ( $arr[ $i ]['status'] ){
 								item.find('.sg-title:not(.d-none)').after('<br>')
-								item.find('.sg-status')
+								item.find('.sg-status-holder')
 									.html( formatters.status(null, $arr[ $i ]) )
 									//.addClass('status__'+ ($arr[ $i ]['status']? $arr[ $i ]['status'].replaceAll(' ', '_').toLowerCase() : '') ) //safe to use trans directly
 							}	else if ( $arr[ $i ]['subtype'] ){
@@ -1059,12 +1093,11 @@
 								let item_date = $arr[ $i ]['published'] > 1000? $arr[ $i ]['published'] : ($arr[ $i ]['due']??$arr[ $i ]['due_date']??$arr[ $i ][ ajaxResponse.html.current_app.toLowerCase() +'_due']??$arr[ $i ][ ajaxResponse.html.current_app.toLowerCase() +'_due_date']??$arr[ $i ]['registered']??$arr[ $i ]['created']??$arr[ $i ]['updated']);
 								item_date = converters.datetime.to(item_date)
 								if ($count) {
-									item.find('.card-body > .row:last-child').append( 
-					    			$('<div class="col-12 pt-1" />').text( item_date ) 
+									item.find('.card-footer > .row').prepend( 
+					    			$('<div class="col-12 small" />').text(item.find('.sg-links').text()) 
 					    		)
-								} else {	
-									item.find('.sg-links').text( item_date )
-								}		
+								}
+								item.find('.sg-links').text( item_date )		
 							}
 							$(formatters.links(null, $arr[ $i ]))
 	    					.appendTo( item.find('.sg-links-end') )
@@ -1183,7 +1216,7 @@
 		          <div class="row">
 		            <div class="col-12 lh-lg">
 		              <span class="sg-title pe-2 fs-6"></span>
-		              <span class="sg-status card-text"></span> 
+		              <span class="sg-status-holder card-text"></span> 
 		              <span class="sg-creator card-text ps-sm-1 float-end mt-1"></span> 
 		            </div>
 		          </div>        	

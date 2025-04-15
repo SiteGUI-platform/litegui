@@ -138,7 +138,7 @@
 			</div>		
 			<div class="col-sm-auto my-2">	  
 				<div class="input-group">
-					<button type="button" class="input-group-text btn btn-secondary pe-3">{"Section"|trans} <i class="bi bi-caret-down invisible"></i></button>
+					<button type="button" class="input-group-text btn btn-secondary"><a class="text-decoration-none text-white" href="https://{$site.url}/?nam=sgblock" target="_blank">{"Section"|trans} <i class="bi bi-arrow-up-right-square-fill text-lime"></i></a></button>
 					<select class="form-select" id='section' name='menu[section]'>
 						<option></option>
 						{foreach from=$html.sections item=section}

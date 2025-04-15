@@ -106,11 +106,11 @@ class Activity {
 			if ($activity['processed']){
 				$activity['processed'] = date("M d, Y H:i", $activity['processed']);	
 			}	
+			$activity['meta'] = json_decode($activity['meta']??'', true);
 
 			if ( !empty($activity['creator']) ){
 				$creator = $this->lookupUsers($activity['creator'])?: $this->lookupAdmins($activity['creator']);
 				$activity['creator_name'] = $creator[0]['name']??'';
-				$activity['meta'] = json_decode($activity['meta']??'', true);
 			}
 
 			if ($this->view->html){				

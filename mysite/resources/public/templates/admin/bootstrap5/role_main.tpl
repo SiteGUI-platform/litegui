@@ -2,7 +2,7 @@
 
 {if $html.permissions}
 <div class="col-12 col-md-10 mx-auto pb-4" id="datatable-extra">
-  <div class="p-3 pt-0">
+  <div class="p-3">
     <span class="card-title h5">{"Permission Table"|trans}</span>
   </div>
   <div class="card" style="overflow-x:auto">

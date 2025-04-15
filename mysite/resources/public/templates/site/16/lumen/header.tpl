@@ -14,7 +14,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js" integrity="sha512-7Pi/otdlbbCR+LnW+F7PwFcSDJOuUJB3OxtEHbg4vSMvzvJjde4Po1v4BR9Gdc9aXNUNFVUY+SK51wWT8WF0Gg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- Custom fonts for this template-->
 	<script src="{$site.cdn}/{$template}/assets/sitegui.js?v=17" id="sitegui-js" data-locale="{$site.locale|default:$user.language|default:$site.language}" data-currency="{$site.currency.code|default:USD}" data-precision="{$site.currency.precision|default:2}" data-timezone="{$user.timezone|default:$site.timezone|default:UTC}"></script>
-	<link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600" rel="stylesheet" />	
+	<link href="https://fonts.googleapis.com/css?family=Nunito:300,400,600&display=swap" rel="stylesheet" />	
  	<link href="{$site.cdn}/{$template}/assets/sitegui.css?v=38" rel="stylesheet" />
 	<link rel="shortcut icon" href="{$site.cdn}/{$template}/assets/favicon.png" /> 
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" />

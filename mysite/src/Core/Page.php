@@ -590,6 +590,9 @@ class Page {
 			if ( !empty($data['published']) ){	
 				$block['api']['page']['published'] = $data['published'];
 			}				
+			if ( !empty($data['status']) ){	
+				$block['api']['page']['status'] = $data['status'];
+			}						
 			$this->view->addBlock('main', $block, $this->class .'::update');
 		}							
 

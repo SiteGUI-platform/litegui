@@ -955,12 +955,11 @@
 								let item_date = $arr[ $i ]['published'] > 1000? $arr[ $i ]['published'] : ($arr[ $i ]['due']??$arr[ $i ]['due_date']??$arr[ $i ][ ajaxResponse.html.current_app.toLowerCase() +'_due']??$arr[ $i ][ ajaxResponse.html.current_app.toLowerCase() +'_due_date']??$arr[ $i ]['registered']??$arr[ $i ]['created']??$arr[ $i ]['updated']);
 								item_date = converters.datetime.to(item_date)
 								if ($count) {
-									item.find('.card-body > .row:last-child').append( 
-					    			$('<div class="col-12 pt-1" />').text( item_date ) 
+									item.find('.card-footer > .row').prepend( 
+					    			$('<div class="col-12 small" />').text(item.find('.sg-links').text()) 
 					    		)
-								} else {	
-									item.find('.sg-links').text( item_date )
-								}		
+								}
+								item.find('.sg-links').text( item_date )		
 							}
 							$(formatters.links(null, $arr[ $i ]))
 	    					.appendTo( item.find('.sg-links-end') )
@@ -1070,7 +1069,7 @@
           <div class="row">
             <div class="col-12">
               <span class="sg-title pe-2 fs-6"></span>
-              <span class="sg-status card-text text-success"></span> 
+              <span class="sg-status card-text"></span> 
               <span class="sg-creator card-text ps-sm-1 float-end mt-1"></span> 
             </div>
           </div>        	

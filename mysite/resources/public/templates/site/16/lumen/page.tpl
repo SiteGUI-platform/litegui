@@ -50,7 +50,7 @@
                                       {$value}{if !$value@last}, {/if}
                                     {/foreach}
                                 {else}
-                                    <span class="{if $field.type eq date}js-sg-date{elseif $field.type eq time}js-sg-time{/if}">{$field.value}</span>
+                                    <span class="{if $field.type eq date}js-sg-date{elseif $field.type eq time}js-sg-time{elseif $field.type eq currency}js-sg-currency{/if}">{$field.value}</span>
                                 {/if}    
                                 {if $field.slug}</a>{/if}         
                             </div>

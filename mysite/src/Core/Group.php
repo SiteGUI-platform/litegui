@@ -263,8 +263,9 @@ class Group {
 		!empty($status) && $this->view->setStatus($status);
 	}
 
-	public function updateUserGroups($user_id, $group_ids, $status = 'Active'){
+	public function updateUserGroups($user_id, $group_ids, $status = 'Active', $remove_others = false){
 		//allow Order process() which runs as the buyer to update buyer groups
+		$result = 0;
 		if ($this->user->has($this->requirements['MANAGE']) OR $this->user->getId() == $user_id){
 			$valid_gids = $this->db->table($this->site_prefix .'_config')
 					->where('type', 'db')
@@ -280,17 +281,17 @@ class Group {
 			}	
 			if (!empty($upsert) AND $this->upsert($this->site_prefix .'_config', ['type', 'object', 'property', 'value'], $upsert, ['value']) 
 			){
-				$result = 1;
+				$result++;
 			}
 			//delete existing [unselected, invalid] group 
-			if ($this->db
+			if ($remove_others AND $this->db
 				->table($this->site_prefix .'_config')
 				->where('type', 'group')
 				->where('object', $user_id)
 				->whereNotIn('property', $valid_gids?:[])
 				->delete()
 			){
-				$result = 1;
+				$result++;
 			}
 		}
 		return $result??false;		
