@@ -83,7 +83,7 @@
 					<button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-versions" role="tab" aria-controls="tab-versions" aria-selected="false">{"Versions"|trans}</button>
 				</li>					
 			{/if}
-				{block name=APP_tabname_end hide}{$smarty.block.child}{/block}
+				{block name=APP_tabname_extra hide}{$smarty.block.child}{/block}
 			</ul>
 
 			<!-- Tab panes -->
@@ -507,6 +507,7 @@
 					</div>	
 				</div>	
 			{/if}					
+			{block name=APP_tabcontent_extra hide}{$smarty.block.child}{/block}
 			</div>	
 		</div>
 		<div class="card-footer text-center">

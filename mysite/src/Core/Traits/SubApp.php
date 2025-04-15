@@ -3,6 +3,7 @@ namespace SiteGUI\Core\Traits;
 
 trait SubApp {
 	protected function linkSubApps($func, &$page, $page_info, &$status, $app, $is_supervisor = false){
+		$_parent = $this->hashify(getmypid());
 		foreach ($page['sub'] AS $name => $value) {
 			$name = $this->formatAppName($name);
 			if ( !empty($app['app_sub'][ $name ]) ){ //valid subapp	
@@ -39,13 +40,16 @@ trait SubApp {
 					unset($page['sub'][ $name ]['sub']); //prevent loop here
 					$page['sub'][ $name ]['hide_success_message'] = true; //hide success message for subapp entry
 					//set parent so subapp may refer back to parent
-					$page['sub'][ $name ]['_parent']['id'] = $page_info['id'];
-					$page['sub'][ $name ]['_parent']['name'] = $page['name']??$page_info['name']??''; //this is an array
-					$page['sub'][ $name ]['_parent']['slug'] = $page['slug']??$page_info['slug']??'';
-					$page['sub'][ $name ]['_parent']['type'] = $page_info['type']??$page['slug']??'';
-					$page['sub'][ $name ]['_parent']['subtype'] = $page_info['subtype']??$page['slug']??'';
-					$page['sub'][ $name ]['_parent']['creator'] = $page_info['creator']??null;
-					$page['sub'][ $name ]['_parent']['status'] = $page['status']??$page_info['status']??null;
+					if ( !empty($page_info['_parent']['root_id']) ){
+						$page['sub'][ $name ][ $_parent ] = $page_info['_parent']; //get root, override parent below
+					}
+					$page['sub'][ $name ][ $_parent ]['id'] = $page_info['id'];
+					$page['sub'][ $name ][ $_parent ]['name'] = $page['name']??$page_info['name']??''; //this is an array
+					$page['sub'][ $name ][ $_parent ]['slug'] = $page['slug']??$page_info['slug']??'';
+					$page['sub'][ $name ][ $_parent ]['type'] = $page_info['type']??$page['slug']??'';
+					$page['sub'][ $name ][ $_parent ]['subtype'] = $page_info['subtype']??$page['slug']??'';
+					$page['sub'][ $name ][ $_parent ]['creator'] = $page_info['creator']??null;
+					$page['sub'][ $name ][ $_parent ]['status'] = $page['status']??$page_info['status']??null;
 
 					$class_app = str_replace('Core\Traits', 'Core\App', __NAMESPACE__); //SubApps cannot be Core app
 					if ($this instanceof $class_app ){

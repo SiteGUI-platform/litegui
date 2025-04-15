@@ -71,7 +71,9 @@
 	  el.parentNode.addEventListener('touchstart', function(ev) {
 	  	//console.log('touchstart')
 	  	el.parentNode.removeEventListener('mouseenter', el.parentNode.mouseenter)
-	  }, { passive: true})	
+	  }, { 
+	  	passive: true
+	  })	
 	})
 	document.querySelectorAll('.navbar .nav-item').forEach(el => {	  
 	  el.addEventListener('mouseenter', el.mouseenter = function(ev) {

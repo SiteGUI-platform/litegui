@@ -947,7 +947,8 @@
 				    		post.page.fields = {}
 				    		post.page.fields[ $input ] = $(target).parent().attr('data-id')
 				    	} else {
-				    		post.page[ $input ] = $(target).parent().attr('data-id')
+				    		post.page.fields = {}
+				    		post.page.fields[ $input ] = post.page[ $input ] = $(target).parent().attr('data-id')
 				    	}
 			        $.post(href, post, function(data) {
 		            var response = data // already a json object jQuery.parseJSON(data);
